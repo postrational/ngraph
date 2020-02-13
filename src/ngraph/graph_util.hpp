@@ -69,6 +69,7 @@ namespace ngraph
     /// Most useful for finding parameters of a graph directly from the
     /// result nodes and not from function parameters or extracting a
     /// subgraph relevant to the computation of certain outputs
+    NGRAPH_API
     void traverse_nodes(const NodeVector& subgraph_results,
                         std::function<void(std::shared_ptr<Node>)> f,
                         bool include_control_deps,
