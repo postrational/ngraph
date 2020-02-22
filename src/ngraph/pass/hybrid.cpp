@@ -19,9 +19,10 @@
 // #include "hybrid/hybrid_util.hpp"
 // #include "ngraph/op/constant.hpp"
 // #include "ngraph/op/convert.hpp"
-// #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/get_output_element.hpp"
 // #include "ngraph/op/slice.hpp"
-// #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/env_util.hpp"
 // #include "ngraph/pass/visualize_tree.hpp"
 // #include "nnp_env_vars.hpp"
 // #include "nnp_placement.hpp"
@@ -332,21 +333,19 @@ void ngraph::pass::Hybrid::rewrite_function(const shared_ptr<Function>& f)
                 {
                     auto input_node = output.get_node();
                     auto index = output.get_index();
-                    // auto input_layout =
-                    // input_node->get_output_tensor_ptr(index)->get_tensor_layout();
-                    auto nnp_layout = dynamic_pointer_cast<runtime::nnp::NNPLayout>(
-                        input_node->output(index).get_tensor().get_tensor_layout());
-                    NODE_VALIDATION_CHECK(input_node, nnp_layout, "Layout is not NNPLayout");
+                    // auto nnp_layout = dynamic_pointer_cast<runtime::nnp::NNPLayout>(
+                    //     input_node->output(index).get_tensor().get_tensor_layout());
+                    // NODE_VALIDATION_CHECK(input_node, nnp_layout, "Layout is not NNPLayout");
                     for (Input<Node> input : output.get_target_inputs())
                     {
                         Output<Node> new_output = fc->outputs()[output_index];
-                        runtime::nnp::util::layout_util::set_output_nnp_layout(
-                            fc, nnp_layout, output_index);
+                        // runtime::nnp::util::layout_util::set_output_nnp_layout(
+                        //     fc, nnp_layout, output_index);
                         auto goe = make_shared<op::GetOutputElement>(fc, output_index);
                         goe->set_placement(Placement::CPU);
                         input.replace_source_output(goe);
                         // Inherit layout from GOE's input
-                        runtime::nnp::util::layout_util::set_output_nnp_layout(goe, nnp_layout, 0);
+                        // runtime::nnp::util::layout_util::set_output_nnp_layout(goe, nnp_layout, 0);
                     }
                     output_index++;
                 }
@@ -358,7 +357,7 @@ void ngraph::pass::Hybrid::rewrite_function(const shared_ptr<Function>& f)
 void ngraph::pass::Hybrid::add_hybrid_to_pass_manager(ngraph::pass::Manager& pass_manager)
 {
     const std::string backend_name =
-        runtime::nnp::use_interpreter_for_hybrid() ? "INTERPRETER" : "CPU";
+        getenv_bool("NGRAPH_GPU_INTERPRETER_FALLBACK") ? "INTERPRETER" : "CPU";
     shared_ptr<runtime::Backend> fallback_backend = runtime::Backend::create(backend_name);
     pass_manager.register_pass<ngraph::pass::Hybrid>(fallback_backend);
 }

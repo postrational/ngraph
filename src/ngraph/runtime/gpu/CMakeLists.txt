@@ -42,6 +42,7 @@ set(SRC
     gpu_tensor_wrapper.cpp
     gpu_tensor.cpp
     gpu_util.cpp
+    node_enum.cpp
     type_info.cpp
     pass/gpu_batch_norm_cache.cpp
     pass/gpu_layout.cpp

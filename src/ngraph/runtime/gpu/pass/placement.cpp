@@ -17,15 +17,17 @@
 #include <numeric>
 
 #include "ngraph/runtime/gpu/pass/placement.hpp"
+#include "ngraph/runtime/gpu/node_enum.hpp"
+#include "ngraph/log.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::nnp::pass::OpPlacement::OpPlacement()
+runtime::gpu::pass::OpPlacement::OpPlacement()
 {
 }
 
-bool runtime::nnp::pass::OpPlacement::run_on_function(std::shared_ptr<ngraph::Function> function)
+bool runtime::gpu::pass::OpPlacement::run_on_function(std::shared_ptr<ngraph::Function> function)
 {
     for (shared_ptr<Node> node : function->get_ops())
     {
@@ -34,7 +36,7 @@ bool runtime::nnp::pass::OpPlacement::run_on_function(std::shared_ptr<ngraph::Fu
     return false;
 }
 
-void runtime::nnp::pass::OpPlacement::assign_placement(shared_ptr<Node> node)
+void runtime::gpu::pass::OpPlacement::assign_placement(shared_ptr<Node> node)
 {
     if (is_supported_on_device(node) != DeviceSupport::SUPPORTED)
     {
@@ -46,8 +48,8 @@ void runtime::nnp::pass::OpPlacement::assign_placement(shared_ptr<Node> node)
     }
 }
 
-runtime::nnp::pass::OpPlacement::DeviceSupport
-    runtime::nnp::pass::OpPlacement::is_supported_on_device(shared_ptr<Node> node)
+runtime::gpu::pass::OpPlacement::DeviceSupport
+    runtime::gpu::pass::OpPlacement::is_supported_on_device(shared_ptr<Node> node)
 {
     DeviceSupport rc = DeviceSupport::UNKNOWN;
     try

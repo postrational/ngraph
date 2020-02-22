@@ -16,41 +16,34 @@
 
 #pragma once
 
-#include <memory>
-#include <set>
-
-#include "ngraph/coordinate_diff.hpp"
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
+    namespace op
+    {
+        enum class OP_TYPEID;
+    }
     namespace runtime
     {
         namespace gpu
         {
-            namespace pass
-            {
-                class OpPlacement;
-            }
+            ngraph::op::OP_TYPEID to_enum(const Node* node);
+            ngraph::op::OP_TYPEID to_enum(const Node& node);
         }
     }
 }
 
-class ngraph::runtime::gpu::pass::OpPlacement : public ngraph::pass::FunctionPass
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+// Abs,
+// Acos,
+// ...
+enum class ngraph::op::OP_TYPEID
 {
-public:
-    OpPlacement();
-
-    enum class DeviceSupport
-    {
-        UNKNOWN,
-        SUPPORTED,
-        UNSUPPORTED
-    };
-
-    static DeviceSupport is_supported_on_device(std::shared_ptr<Node> node);
-    static void assign_placement(std::shared_ptr<Node> node);
-
-private:
-    virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+#define NGRAPH_OP(a, b) a,
+#include "ngraph/opsets/opset0_tbl.hpp"
+#undef NGRAPH_OP
+// #define NGRAPH_OP(a, b, c) a,
+// #include "op/op_tbl.hpp"
+// #undef NGRAPH_OP
 };
