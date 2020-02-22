@@ -363,6 +363,8 @@ set (SRC
     op/topk.hpp
     op/xor.cpp
     op/xor.hpp
+    op/function_call.cpp
+    op/function_call.hpp
     op/fused/batch_mat_mul_transpose.cpp
     op/fused/batch_mat_mul_transpose.hpp
     op/fused/clamp.cpp
@@ -517,6 +519,8 @@ set (SRC
     pass/get_output_element_elimination.hpp
     pass/graph_rewrite.cpp
     pass/graph_rewrite.hpp
+    pass/hybrid.cpp
+    pass/hybrid.hpp
     pass/like_replacement.cpp
     pass/like_replacement.hpp
     pass/liveness.cpp
