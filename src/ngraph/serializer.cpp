@@ -1590,6 +1590,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
+        case OP_TYPEID::FunctionCall:
+        {
+            throw ngraph_error("Deserializing op::FunctionCall is not supported");
+        }
         case OP_TYPEID::Gather:
         {
             auto axis = node_js.at("axis").get<size_t>();
@@ -3694,6 +3698,10 @@ json JSONSerializer::serialize_node(const Node& n)
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
+    }
+    case OP_TYPEID::FunctionCall:
+    {
+        throw ngraph_error("Serializing op::FunctionCall is not supported");
     }
     case OP_TYPEID::Gather:
     {

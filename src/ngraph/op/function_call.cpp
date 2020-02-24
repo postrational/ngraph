@@ -21,12 +21,12 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::FunctionCall::type_info;
+constexpr NodeTypeInfo op::v0::FunctionCall::type_info;
 
-op::FunctionCall::FunctionCall(const vector<Output<Node>>& outputs,
-                               const vector<Output<Node>>& inputs,
-                               const Function& function,
-                               shared_ptr<runtime::Backend> backend)
+op::v0::FunctionCall::FunctionCall(const vector<Output<Node>>& outputs,
+                                   const vector<Output<Node>>& inputs,
+                                   const Function& function,
+                                   shared_ptr<runtime::Backend> backend)
     : Op(inputs)
     , m_function_outputs{outputs}
     , m_function{ngraph::clone_function(function)}
@@ -40,13 +40,13 @@ op::FunctionCall::FunctionCall(const vector<Output<Node>>& outputs,
     }
 }
 
-const string& op::FunctionCall::description() const
+const string& op::v0::FunctionCall::description() const
 {
     static string s_type = "FunctionCall";
     return s_type;
 }
 
-shared_ptr<Node> op::FunctionCall::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::FunctionCall::copy_with_new_args(const NodeVector& new_args) const
 {
     vector<Output<Node>> inputs;
     for (const shared_ptr<Node>& arg : new_args)
@@ -56,17 +56,42 @@ shared_ptr<Node> op::FunctionCall::copy_with_new_args(const NodeVector& new_args
     return make_shared<FunctionCall>(m_function_outputs, inputs, *m_function, m_backend);
 }
 
-shared_ptr<runtime::Backend> op::FunctionCall::get_backend() const
+void op::v0::FunctionCall::set_function_outputs(const std::vector<Output<Node>>& function_outputs)
+{
+    m_function_outputs = function_outputs;
+}
+
+std::vector<Output<Node>> op::v0::FunctionCall::get_function_outputs() const
+{
+    return m_function_outputs;
+}
+
+void op::v0::FunctionCall::set_backend(const shared_ptr<runtime::Backend>& backend)
+{
+    m_backend = backend;
+}
+
+shared_ptr<runtime::Backend> op::v0::FunctionCall::get_backend() const
 {
     return m_backend;
 }
 
-shared_ptr<runtime::Executable> op::FunctionCall::get_executable() const
+void op::v0::FunctionCall::set_executable(const shared_ptr<runtime::Executable>& executable)
+{
+    m_executable = executable;
+}
+
+shared_ptr<runtime::Executable> op::v0::FunctionCall::get_executable() const
 {
     return m_executable;
 }
 
-shared_ptr<Function> op::FunctionCall::get_function() const
+void op::v0::FunctionCall::set_function(const shared_ptr<Function>& function)
+{
+    m_function = function;
+}
+
+shared_ptr<Function> op::v0::FunctionCall::get_function() const
 {
     return m_function;
 }
