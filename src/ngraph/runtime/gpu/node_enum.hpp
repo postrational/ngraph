@@ -43,7 +43,7 @@ enum class ngraph::op::OP_TYPEID
 #define NGRAPH_OP(a, b) a,
 #include "ngraph/opsets/opset0_tbl.hpp"
 #undef NGRAPH_OP
-// #define NGRAPH_OP(a, b, c) a,
-// #include "op/op_tbl.hpp"
-// #undef NGRAPH_OP
+    // #define NGRAPH_OP(a, b, c) a,
+    // #include "op/op_tbl.hpp"
+    // #undef NGRAPH_OP
 };

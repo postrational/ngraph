@@ -29,16 +29,17 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/hybrid.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
-
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
@@ -48,6 +49,7 @@
 #include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
+#include "ngraph/runtime/gpu/pass/placement.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;
@@ -152,6 +154,11 @@ void runtime::gpu::GPUCompiledFunction::compile()
     pass_manager.register_pass<ngraph::pass::Opset0Downgrade>();
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
     pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
+    pass_manager.register_pass<runtime::gpu::pass::Placement>();
+    const std::string backend_name =
+        getenv_bool("NGRAPH_GPU_INTERPRETER_FALLBACK") ? "INTERPRETER" : "CPU";
+    shared_ptr<runtime::Backend> fallback_backend = runtime::Backend::create(backend_name);
+    pass_manager.register_pass<ngraph::pass::Hybrid>(fallback_backend);
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();

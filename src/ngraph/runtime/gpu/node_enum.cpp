@@ -25,17 +25,17 @@ ngraph::op::OP_TYPEID ngraph::runtime::gpu::to_enum(const Node& node)
 
 ngraph::op::OP_TYPEID ngraph::runtime::gpu::to_enum(const Node* node)
 {
-// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// {"Abs", op::OP_TYPEID::Abs},
-// {"Acos", op::OP_TYPEID::Acos},
-// ...
+    // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+    // {"Abs", op::OP_TYPEID::Abs},
+    // {"Acos", op::OP_TYPEID::Acos},
+    // ...
     static std::unordered_map<std::string, op::OP_TYPEID> typeid_map{
 #define NGRAPH_OP(a, b) {#a, ngraph::op::OP_TYPEID::a},
 #include "ngraph/opsets/opset0_tbl.hpp"
 #undef NGRAPH_OP
-// #define NGRAPH_OP(a, b, c) {#a, op::OP_TYPEID::a},
-// #include "op/op_tbl.hpp"
-// #undef NGRAPH_OP
+        // #define NGRAPH_OP(a, b, c) {#a, op::OP_TYPEID::a},
+        // #include "op/op_tbl.hpp"
+        // #undef NGRAPH_OP
     };
 
     op::OP_TYPEID rc;

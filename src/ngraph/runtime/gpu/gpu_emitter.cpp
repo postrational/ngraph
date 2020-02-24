@@ -60,7 +60,7 @@ function<std::string(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(co
     auto it = typeid_map.find(type_index(typeid(node)));
     if (it == typeid_map.end())
     {
-        throw unsupported_op("Unsupported op '" + node.description() + "'");
+        throw unsupported_op("No emitter for op  '" + node.description() + "'");
     }
 
     return it->second;

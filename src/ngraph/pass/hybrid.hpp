@@ -35,8 +35,6 @@ class ngraph::pass::Hybrid : public ngraph::pass::FunctionPass
 public:
     Hybrid(std::shared_ptr<runtime::Backend> fallback_backend);
 
-    static void add_hybrid_to_pass_manager(ngraph::pass::Manager& manager);
-
 private:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
     void rewrite_function(const std::shared_ptr<Function>& f);

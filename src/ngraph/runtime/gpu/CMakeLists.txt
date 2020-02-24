@@ -167,7 +167,8 @@ if (NGRAPH_GPU_ENABLE)
             ${CUDA_cudart_LIBRARY}
             ${CUDA_LIBRARIES}
             ${CUDA_CUBLAS_LIBRARIES}
-            ${CUDNN_LIBRARIES})
+            ${CUDNN_LIBRARIES}
+            cpu_backend)
 
     install(TARGETS gpu_backend
         ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}

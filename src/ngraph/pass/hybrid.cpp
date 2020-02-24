@@ -21,8 +21,8 @@
 // #include "ngraph/op/convert.hpp"
 #include "ngraph/op/get_output_element.hpp"
 // #include "ngraph/op/slice.hpp"
-#include "ngraph/pass/manager.hpp"
 #include "ngraph/env_util.hpp"
+#include "ngraph/pass/manager.hpp"
 // #include "ngraph/pass/visualize_tree.hpp"
 // #include "nnp_env_vars.hpp"
 // #include "nnp_placement.hpp"
@@ -345,21 +345,14 @@ void ngraph::pass::Hybrid::rewrite_function(const shared_ptr<Function>& f)
                         goe->set_placement(Placement::CPU);
                         input.replace_source_output(goe);
                         // Inherit layout from GOE's input
-                        // runtime::nnp::util::layout_util::set_output_nnp_layout(goe, nnp_layout, 0);
+                        // runtime::nnp::util::layout_util::set_output_nnp_layout(goe, nnp_layout,
+                        // 0);
                     }
                     output_index++;
                 }
             }
         }
     }
-}
-
-void ngraph::pass::Hybrid::add_hybrid_to_pass_manager(ngraph::pass::Manager& pass_manager)
-{
-    const std::string backend_name =
-        getenv_bool("NGRAPH_GPU_INTERPRETER_FALLBACK") ? "INTERPRETER" : "CPU";
-    shared_ptr<runtime::Backend> fallback_backend = runtime::Backend::create(backend_name);
-    pass_manager.register_pass<ngraph::pass::Hybrid>(fallback_backend);
 }
 
 bool ngraph::pass::Hybrid::is_fallback(const Node* node) const

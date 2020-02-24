@@ -30,16 +30,16 @@ namespace ngraph
         {
             namespace pass
             {
-                class OpPlacement;
+                class Placement;
             }
         }
     }
 }
 
-class ngraph::runtime::gpu::pass::OpPlacement : public ngraph::pass::FunctionPass
+class ngraph::runtime::gpu::pass::Placement : public ngraph::pass::FunctionPass
 {
 public:
-    OpPlacement();
+    Placement();
 
     enum class DeviceSupport
     {
