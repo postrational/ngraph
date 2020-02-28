@@ -88,25 +88,35 @@ TEST(float16, assigns)
     }
 }
 
+struct DoubleF16
+{
+    double d;
+    float16 f16;
+};
+
 TEST(float16, values)
 {
-    std::vector<double> f32vec{2.73786e-05,
-                               3.87722e-05,
-                               -0.0223043,
-                               5.10779e-05,
-                               -5.10779e-05,
-                               -2.553895e-05,
-                               -0.0001021558,
-                               5.960464477539063e-08,
-                               8.940696716308594e-08,
-                               65536.0,
-                               65519.0,
-                               65520.0};
-    std::vector<uint16_t> intvals = {
-        459, 650, 42422, 857, 0x8359, 0x81ac, 0x86b2, 0x01, 0x02, 0x7c00, 0x7bff, 0x7c00};
-    for (size_t i = 0; i < f32vec.size(); ++i)
+    std::vector<DoubleF16> vals{{std::numeric_limits<double>::infinity(), {0, 0x1F, 0}},
+                                {-std::numeric_limits<double>::infinity(), {1, 0x1F, 0}},
+                                {std::numeric_limits<double>::quiet_NaN(), {0, 0x1F, 0x200}},
+                                {std::numeric_limits<double>::signaling_NaN(), {0, 0x1f, 0x300}},
+                                {2.73786e-05, float16::from_bits(459)},
+                                {3.87722e-05, float16::from_bits(650)},
+                                {-0.0223043, float16::from_bits(42422)},
+                                {5.10779e-05, float16::from_bits(857)},
+                                {-5.10779e-05, float16::from_bits(0x8359)},
+                                {-2.553895e-05, float16::from_bits(0x81ac)},
+                                {-0.0001021558, float16::from_bits(0x86b2)},
+                                {5.960464477539063e-08, float16::from_bits(0x01)},
+                                {8.940696716308594e-08, float16::from_bits(0x02)},
+                                {65536.0, float16::from_bits(0x7c00)},
+                                {65519.0, float16::from_bits(0x7bff)},
+                                {65520.0, float16::from_bits(0x7c00)}};
+    for (size_t i = 0; i < vals.size(); ++i)
     {
-        float16 fp16val = f32vec.at(i);
-        EXPECT_EQ(intvals.at(i), fp16val.to_bits());
+        auto df16 = vals.at(i);
+        double d = df16.d;
+        float16 f16 = d;
+        EXPECT_EQ(df16.f16.to_bits(), f16.to_bits());
     }
 }

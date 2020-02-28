@@ -49,6 +49,57 @@ float16::float16(float value)
         uint32_t iv;
     };
     fv = value;
+    constexpr uint32_t smask = 0x80000000;
+    constexpr uint32_t emask_32 = 0x7F800000;
+    constexpr uint32_t fmask_32 = 0x007fffff;
+    // These are the "half to even" for a short-float in the high half of a 32-bit int
+    constexpr uint32_t rmask_16 = 0x00001fff << 3;
+    constexpr uint32_t reven_16 = 0x00001000 << 3;
+    constexpr uint32_t emask_16 = 0x7c000000;
+    constexpr uint32_t fmask_16 = 0x03ff0000;
+
+    uint32_t e_32 = iv & emask_32;
+    int16_t e = e_32 >> 22;
+    uint32_t frac = (iv & fmask_32) << 3;
+    if (e_32 == emask_32)
+    {
+        // Inf or NaN
+        if (frac != 0)
+        {
+            // NaN
+            frac &= fmask_16;
+            if (frac == 0)
+            {
+                frac = 0x00010000;
+            }
+        }
+        m_value = ((iv & smask) | emask_16 | frac) >> 16;
+        return;
+    }
+    else if (e - 127 + 15 > 0)
+    {
+        // In the normalized_16 realm
+        if ((frac & rmask_16) == reven_16)
+        {
+            frac += reven_16;
+            if (frac > fmask_16)
+            {
+                e++;
+            }
+        }
+        frac &= fmask_16;
+        if (e > 30)
+        {
+            // Infinity
+            m_value = ((iv & smask) | emask_16 | 0);
+        }
+        else
+        {
+            m_value = ((iv & smask) | e << 26 | frac);
+        }
+        return;
+    }
+
     uint32_t hidden_one = 0x00800000;
     uint32_t sign = iv & 0x80000000;
     uint32_t biased_exp = (iv & 0x7F800000) >> 23;
