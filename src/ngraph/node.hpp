@@ -522,6 +522,10 @@ namespace ngraph
                                  const Output<Node>& pattern_value,
                                  const Output<Node>& graph_value);
 
+        const std::set<const Function*>& get_owning_functions() const;
+        bool is_member_of_function(const Function*) const;
+        bool is_member_of_function(const std::shared_ptr<Function>&) const;
+
     private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
@@ -541,6 +545,7 @@ namespace ngraph
         Placement m_placement = Placement::DEFAULT;
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
+        std::set<const Function*> m_owning_functions;
     };
 
     using NodeTypeInfo = Node::type_info_t;

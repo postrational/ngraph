@@ -1079,3 +1079,18 @@ vector<Output<const Node>> Node::outputs() const
 
     return result;
 }
+
+const set<const Function*>& Node::get_owning_functions() const
+{
+    return m_owning_functions;
+}
+
+bool Node::is_member_of_function(const Function* f) const
+{
+    return m_owning_functions.find(f) != m_owning_functions.end();
+}
+
+bool Node::is_member_of_function(const shared_ptr<Function>& fsp) const
+{
+    return m_owning_functions.find(fsp.get()) != m_owning_functions.end();
+}
