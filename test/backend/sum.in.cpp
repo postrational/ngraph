@@ -109,13 +109,14 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_large_1d_to_scalar)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    random_generator.seed(2);
+    default_random_engine generator(2);
+    uniform_real_distribution<float> distribution(0.0, 256.0);
     vector<float> v_a(1000000, 0);
-    double r = 0;
+    float r = 0;
     for (int i = 0; i < 1000000; i++)
     {
-        v_a[i] = static_cast<float>(random_generator() % 255);
-        r += static_cast<double>(v_a[i]);
+        v_a[i] = distribution(generator);
+        r += v_a[i];
     }
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, v_a);
