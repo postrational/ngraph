@@ -112,7 +112,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_large_1d_to_scalar)
     default_random_engine generator(2);
     uniform_real_distribution<float> distribution(0.0, 256.0);
     vector<float> v_a(1000000, 0);
-    float r = 0;
+    double r = 0;
     for (int i = 0; i < 1000000; i++)
     {
         v_a[i] = distribution(generator);
