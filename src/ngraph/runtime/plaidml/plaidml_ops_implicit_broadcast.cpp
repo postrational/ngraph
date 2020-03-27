@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,9 +30,11 @@ namespace ngraph
     }
 }
 
-ngraph::runtime::plaidml::op::ImplicitBroadcast::ImplicitBroadcast(std::shared_ptr<Node> input,
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::ImplicitBroadcast::type_info;
+
+ngraph::runtime::plaidml::op::ImplicitBroadcast::ImplicitBroadcast(const Output<Node>& input,
                                                                    const Shape& shape)
-    : Op{"ImplicitBroadcast", {input}}
+    : Op{{input}}
     , m_shape{shape}
 {
     constructor_validate_and_infer_types();
@@ -40,7 +42,7 @@ ngraph::runtime::plaidml::op::ImplicitBroadcast::ImplicitBroadcast(std::shared_p
 
 void ngraph::runtime::plaidml::op::ImplicitBroadcast::validate_and_infer_types()
 {
-    set_output_type(0, input(0).get_element_type(), m_shape);
+    set_output_type(0, get_input_element_type(0), m_shape);
 }
 
 std::shared_ptr<ngraph::Node> ngraph::runtime::plaidml::op::ImplicitBroadcast::copy_with_new_args(

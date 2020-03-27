@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,26 +17,26 @@
 #include "batch_mat_mul.hpp"
 #include "ngraph/dimension.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::BatchMatMul::BatchMatMul(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : Op("BatchMatMul", check_single_output_args({arg0, arg1}))
+constexpr NodeTypeInfo op::BatchMatMul::type_info;
+
+op::v0::BatchMatMul::BatchMatMul(const Output<Node>& arg0, const Output<Node>& arg1)
+    : Op({arg0, arg1})
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::BatchMatMul::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::BatchMatMul::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<BatchMatMul>(new_args.at(0), new_args.at(1));
 }
 
-void op::BatchMatMul::validate_and_infer_types()
+void op::v0::BatchMatMul::validate_and_infer_types()
 {
     // Check input types
     const auto& arg0_et = get_input_element_type(0);
@@ -77,19 +77,20 @@ void op::BatchMatMul::validate_and_infer_types()
     set_output_type(0, output_et, output_shape);
 }
 
-void op::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0); // NxIxK
 
-    auto arg0 = get_argument(0); // NxIxJ
-    auto arg1 = get_argument(1); // NxJxK
+    auto arg0 = input_value(0); // NxIxJ
+    auto arg1 = input_value(1); // NxJxK
 
-    auto delta_dot_arg1 =
-        make_shared<op::BatchMatMul>(delta, util::batch_mat_transpose(arg1)); // IK.KJ->IJ
+    auto delta_dot_arg1 = make_shared<op::BatchMatMul>(
+        delta, util::batch_mat_transpose(arg1.get_node_shared_ptr())); // IK.KJ->IJ
     adjoints.add_delta(arg0, delta_dot_arg1);
 
-    auto arg0_dot_delta =
-        make_shared<BatchMatMul>(util::batch_mat_transpose(arg0), delta); // JI.IK->JK
+    auto arg0_dot_delta = make_shared<BatchMatMul>(
+        util::batch_mat_transpose(arg0.get_node_shared_ptr()), delta); // JI.IK->JK
     adjoints.add_delta(arg1, arg0_dot_delta);
 }
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
 //*****************************************************************************
 
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::ArgMin::type_name{"ArgMin"};
+constexpr NodeTypeInfo op::ArgMin::type_info;
 
 op::ArgMin::ArgMin(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)
     : op::util::IndexReduction(arg, axis, index_element_type)
@@ -27,7 +28,13 @@ op::ArgMin::ArgMin(const Output<Node>& arg, size_t axis, const element::Type& in
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::ArgMin::copy_with_new_args(const NodeVector& new_args) const
+bool op::ArgMin::visit_attributes(AttributeVisitor& visitor)
+{
+    IndexReduction::visit_attributes(visitor);
+    return true;
+}
+
+shared_ptr<Node> op::ArgMin::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ArgMin>(new_args.at(0), m_axis, this->get_element_type());

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,25 +15,41 @@
 //*****************************************************************************
 
 #include "psroi_pooling.hpp"
+#include "ngraph/attribute_visitor.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::PSROIPooling::PSROIPooling(const shared_ptr<Node>& input,
-                               const std::shared_ptr<Node>& coords,
+constexpr NodeTypeInfo op::PSROIPooling::type_info;
+
+op::PSROIPooling::PSROIPooling(const Output<Node>& input,
+                               const Output<Node>& coords,
                                const size_t output_dim,
                                const size_t group_size,
                                const float spatial_scale,
-                               const Shape& num_bins,
-                               const std::string& kind)
-    : Op("PSROIPooling", check_single_output_args({input, coords}))
+                               int spatial_bins_x,
+                               int spatial_bins_y,
+                               const string& mode)
+    : Op({input, coords})
     , m_output_dim(output_dim)
     , m_group_size(group_size)
     , m_spatial_scale(spatial_scale)
-    , m_num_bins(num_bins)
-    , m_kind(kind)
+    , m_spatial_bins_x(spatial_bins_x)
+    , m_spatial_bins_y(spatial_bins_y)
+    , m_mode(mode)
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::PSROIPooling::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("output_dim", m_output_dim);
+    visitor.on_attribute("group_size", m_group_size);
+    visitor.on_attribute("spatial_scale", m_spatial_scale);
+    visitor.on_attribute("mode", m_mode);
+    visitor.on_attribute("spatial_bins_x", m_spatial_bins_x);
+    visitor.on_attribute("spatial_bins_y", m_spatial_bins_y);
+    return true;
 }
 
 void op::PSROIPooling::validate_and_infer_types()
@@ -72,6 +88,7 @@ shared_ptr<Node> op::PSROIPooling::copy_with_new_args(const NodeVector& new_args
                                      m_output_dim,
                                      m_group_size,
                                      m_spatial_scale,
-                                     m_num_bins,
-                                     m_kind);
+                                     m_spatial_bins_x,
+                                     m_spatial_bins_y,
+                                     m_mode);
 }

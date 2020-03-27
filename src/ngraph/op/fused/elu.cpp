@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 //*****************************************************************************
 #include "ngraph/op/fused/elu.hpp"
 
+#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
@@ -23,26 +25,35 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Elu::Elu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
-    : FusedOp("Elu", {data, alpha})
+constexpr NodeTypeInfo op::Elu::type_info;
+
+op::Elu::Elu(const Output<Node>& data, const double alpha)
+    : FusedOp({data})
+    , m_alpha{alpha}
 {
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::Elu::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("alpha", m_alpha);
+    return true;
+}
+
 NodeVector op::Elu::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto alpha_node = get_argument(1);
+    auto data = input_value(0);
+    shared_ptr<Node> alpha_node =
+        make_shared<op::Constant>(data.get_element_type(), Shape{}, vector<double>{m_alpha});
 
-    alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data->get_shape());
+    alpha_node = builder::numpy_broadcast(alpha_node, data.get_shape());
 
     shared_ptr<ngraph::Node> zero_node =
-        builder::make_constant(data->get_element_type(), data->get_shape(), 0);
+        builder::make_constant(data.get_element_type(), data.get_shape(), 0);
 
     return {make_shared<ngraph::op::Maximum>(data, zero_node) +
             alpha_node *
@@ -52,9 +63,6 @@ NodeVector op::Elu::decompose_op() const
 
 shared_ptr<Node> op::Elu::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-    return make_shared<Elu>(new_args.at(0), new_args.at(1));
+    check_new_args_count(this, new_args);
+    return make_shared<Elu>(new_args.at(0), m_alpha);
 }

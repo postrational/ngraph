@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,11 @@
 #include <algorithm>
 #include <thread>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 
@@ -37,14 +38,14 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
     , m_compiled_function(compiled_function)
 {
-    const auto envConcurrency = std::getenv("NGRAPH_CPU_CONCURRENCY");
-    m_num_ctx = envConcurrency == nullptr ? 1 : std::atoi(envConcurrency);
+    const auto envConcurrency = getenv_int("NGRAPH_CPU_CONCURRENCY");
+    m_num_ctx = envConcurrency <= 0 ? 1 : envConcurrency;
     if (m_num_ctx > std::thread::hardware_concurrency())
     {
         throw ngraph_error(
             "Unexpected value specified for NGRAPH_CPU_CONCURRENCY "
             "(" +
-            std::string(envConcurrency) + "). Please specify a value in range [1-" +
+            std::to_string(envConcurrency) + "). Please specify a value in range [1-" +
             std::to_string(std::thread::hardware_concurrency()) + "]");
     }
 
@@ -77,8 +78,8 @@ void runtime::cpu::CPU_CallFrame::inner_call(
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPUTensorView> tv =
-            static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
+        shared_ptr<runtime::cpu::CPUTensor> tv =
+            static_pointer_cast<runtime::cpu::CPUTensor>(input_tvs[i]);
         if (disable_caching)
         {
             m_ctx_vec[id]->p_en[i] = true;
@@ -92,8 +93,8 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPUTensorView> tv =
-            static_pointer_cast<runtime::cpu::CPUTensorView>(output_tvs[i]);
+        shared_ptr<runtime::cpu::CPUTensor> tv =
+            static_pointer_cast<runtime::cpu::CPUTensor>(output_tvs[i]);
         outputs.push_back(tv->get_data_ptr());
     }
 
@@ -119,7 +120,7 @@ void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
-    auto id = 0;
+    size_t id = 0;
     auto disable_caching = false;
     {
         std::unique_lock<std::mutex> lck(m_mutex);
@@ -128,7 +129,7 @@ void runtime::cpu::CPU_CallFrame::call(
             m_cv.wait(lck);
         }
 
-        for (auto i = 0; i < m_num_ctx; i++)
+        for (size_t i = 0; i < m_num_ctx; i++)
         {
             if (m_id_pool[i])
             {
@@ -181,7 +182,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
 
 void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 {
-    for (auto i = 0; i < m_num_ctx; i++)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
         m_id_pool[i] = true;
         auto ctx = new CPURuntimeContext;
@@ -207,11 +208,24 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
             ctx->memory_buffers.push_back(buffer);
         }
         const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
-
+        // Create scratchpad
+        auto scratchpad_size = mkldnn_emitter->get_max_scratchpad_size();
         if (m_external_function->is_direct_execution())
         {
             ctx->mkldnn_primitives =
                 std::vector<mkldnn::primitive*>(mkldnn_emitter->get_mkldnn_primitives().size());
+            ctx->mkldnn_memories =
+                std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
+            ctx->mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>(
+                mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
+            if (scratchpad_size > 0)
+            {
+                ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment, allocator);
+            }
+            else
+            {
+                ctx->scratchpad_buffer = nullptr;
+            }
         }
         else
         {
@@ -220,25 +234,25 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
         }
 
         ctx->states = m_external_function->m_states.data();
-
-        if (m_external_function->is_direct_execution() &&
-            std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+#if defined(NGRAPH_TBB_ENABLE)
+        if (m_external_function->is_direct_execution() && getenv_bool("NGRAPH_CPU_USE_TBB"))
         {
             // For codegen mode, graph and global control are now part of the code generated
             // CPURuntimeContextCG class.
             ctx->G = new tbb::flow::graph;
-            const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
-            const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
+            const auto envParallelism = getenv_int("NGRAPH_INTER_OP_PARALLELISM");
+            const auto parallelism = envParallelism <= 0 ? 1 : envParallelism;
             ctx->c =
                 new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
         }
+#endif
     }
     m_num_ctx_available = m_num_ctx;
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
-    for (auto i = 0; i < m_num_ctx; i++)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
         auto ctx = m_ctx_vec.back();
         m_ctx_vec.pop_back();
@@ -249,12 +263,25 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         {
             delete p;
         }
+        for (auto m : ctx->mkldnn_memories)
+        {
+            delete m;
+        }
         for (auto buffer : ctx->memory_buffers)
         {
             delete buffer;
         }
-        if (m_external_function->is_direct_execution() &&
-            std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+        for (auto s : ctx->mkldnn_scratchpad_mds)
+        {
+            delete s;
+        }
+        if (m_external_function->is_direct_execution())
+        {
+            delete ctx->scratchpad_buffer;
+        }
+
+#if defined(NGRAPH_TBB_ENABLE)
+        if (m_external_function->is_direct_execution() && getenv_bool("NGRAPH_CPU_USE_TBB"))
         {
             // For codegen mode, graph and global control are now part of a code generated
             // CPURuntimeContext class.
@@ -273,6 +300,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             }
             delete ctx->c;
         }
+#endif
         delete ctx;
     }
     m_num_ctx_available = 0;

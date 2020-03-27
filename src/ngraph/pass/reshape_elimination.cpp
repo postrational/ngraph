@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,9 +35,6 @@
 using namespace std;
 using namespace ngraph;
 
-extern template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input,
-                                                                 AxisVector order);
-
 void pass::ReshapeElimination::construct_identity_reshape_pattern()
 {
     Shape shape_op{3};
@@ -49,12 +46,12 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_identity_reshape_pattern against node = "
                      << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_map = m.get_pattern_value_map();
         auto gop = pattern_map[op];
 
-        auto r1 = dynamic_pointer_cast<op::Reshape>(m.get_match_root());
+        auto r1 = as_type_ptr<op::Reshape>(m.get_match_root());
 
-        if (r1->get_shape() != gop->get_shape())
+        if (r1->get_shape() != gop.get_shape())
         {
             NGRAPH_DEBUG << "Not a no-op; Shapes are different!";
             return false;
@@ -68,7 +65,7 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
             return false;
         }
 
-        replace_node(m.get_match_root(), gop);
+        m.get_match_value().replace(gop);
         return true;
     };
 
@@ -152,9 +149,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 void pass::ReshapeElimination::construct_dot_transpose_pattern()
 {
     // dot(A,B).T = dot (B.T, A.T)
-    auto dot_pred = [](shared_ptr<Node> n) {
-        return static_cast<bool>(dynamic_pointer_cast<op::Dot>(n));
-    };
+    auto dot_pred = [](shared_ptr<Node> n) { return is_type<op::Dot>(n); };
 
     auto pdot = make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, dot_pred);
     auto preshape = make_shared<op::Reshape>(pdot, AxisVector{1, 0}, Shape{1, 2});
@@ -229,10 +224,10 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         auto driver_op = first_bound_reshape_op->get_argument(0);
         auto last_bound_reshape_op = reshape_node_vector.back();
 
-        // Need to check if the user of the last bound op is a reshape since the last reshape is allowed
-        // to have fan-out but the matcher will discard any reshape if it has fan-out
+        // Need to check if the user of the last bound op is a reshape since the last reshape is
+        // allowed to have fan-out but the matcher will discard any reshape if it has fan-out
         auto user_of_last_bound_reshape_op = last_bound_reshape_op->get_users(true)[0];
-        if (std::dynamic_pointer_cast<op::Reshape>(user_of_last_bound_reshape_op))
+        if (is_type<op::Reshape>(user_of_last_bound_reshape_op))
         {
             reshape_node_vector.push_back(user_of_last_bound_reshape_op);
             last_bound_reshape_op = reshape_node_vector.back();
@@ -251,7 +246,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         for (auto it = std::next(reshape_node_vector.begin()); it != reshape_node_vector.end();
              it++)
         {
-            auto r = std::dynamic_pointer_cast<op::Reshape>(*it);
+            auto r = as_type_ptr<op::Reshape>(*it);
 
             // Check that the input to r is the last reshape stored in the
             // subpattern vector
@@ -286,9 +281,9 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
                 continue;
             }
 
-            auto first_reshape = std::dynamic_pointer_cast<op::Reshape>(sub_pattern.front());
+            auto first_reshape = as_type_ptr<op::Reshape>(sub_pattern.front());
             auto input_to_first_reshape = first_reshape->get_argument(0);
-            auto last_reshape = std::dynamic_pointer_cast<op::Reshape>(sub_pattern.back());
+            auto last_reshape = as_type_ptr<op::Reshape>(sub_pattern.back());
 
             auto new_input_order = first_reshape->get_input_order();
             auto new_out_shape = last_reshape->get_shape();

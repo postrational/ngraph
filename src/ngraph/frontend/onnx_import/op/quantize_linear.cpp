@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstddef>
 #include <cstdint>
-#include <iterator>
 #include <memory>
 
-#include "exceptions.hpp"
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/quantize.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "quantize_linear.hpp"
 
@@ -64,18 +61,18 @@ namespace ngraph
                     Shape y_scale_shape = y_scale->get_shape();
                     Shape y_zero_point_shape = y_zero_point->get_shape();
 
-                    return {std::make_shared<ngraph::op::Quantize>(
+                    return {std::make_shared<ngraph::opset0::Quantize>(
                         x,
                         y_scale,
                         y_zero_point,
                         y_zero_point->get_element_type(),
                         axes,
-                        ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)};
+                        ngraph::opset0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

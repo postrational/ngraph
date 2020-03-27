@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,11 +25,12 @@ namespace ngraph
     {
         namespace gpu
         {
-            // This is RNN op, which is formed by the fusion of multiple RNN cells ( LSTM/ GRU/ vanilla RNN)
-            // across multiple time slices
+            // This is RNN op, which is formed by the fusion of multiple RNN cells ( LSTM/ GRU/
+            // vanilla RNN) across multiple time slices
 
             // INPUTS:
-            // [0] - {X0, X1...., Xt} input tensor of layout TNC, Shape{num_fused_layers*batch_size, feature_size}
+            // [0] - {X0, X1...., Xt} input tensor of layout TNC, Shape{num_fused_layers*batch_size,
+            //       feature_size}
             // [1] - recurrent input tensor ht_1 of Shape{sequence length*batch_size, feature_size}
             // [2] - flat parameter tensor consisting of weights and biases for each layer
             //       {W_x^0 | W_h^0 | W_x^1 | W_h^1 | ... | B_x^0 | B_h^0 | B_x^1 | B_h^1 }
@@ -39,12 +40,16 @@ namespace ngraph
             // src_sequence_length - this will be same as number_of_timesteps
             // src_layer_feature_size - feature size w.r.to input tensor
             // src_iter_feature_size - feature size w.r.to hidden state
-            // num_cell_states - number of recurrent state tensor states , LSTM = 2, GRU = 1, vanilla RNN = 1
+            // num_cell_states - number of recurrent state tensor states , LSTM = 2, GRU = 1,
+            //                   vanilla RNN = 1
 
             // OUTPUT VALUE: A tuple with the following structure:
-            //   [0] - ht, sequence-wise output tensor with shape (sequence_length*batch_size, feature_size) .
-            //   [1] - hf, layer-wise output tensor with shape (num_fused_layers*batch_size, feature_size) .
-            //   [2] - ct output cell state tensor with the same shape as states i.e (sequence_length*batch_size, feature_size)
+            //   [0] - ht, sequence-wise output tensor with shape (sequence_length*batch_size,
+            //         feature_size) .
+            //   [1] - hf, layer-wise output tensor with shape (num_fused_layers*batch_size,
+            //         feature_size) .
+            //   [2] - ct output cell state tensor with the same shape as states i.e
+            //         (sequence_length*batch_size, feature_size)
 
             class Rnn : public Op
             {
@@ -60,6 +65,8 @@ namespace ngraph
                     const int src_iter_feature_size,
                     const int direction,
                     const int num_fused_layers);
+                static constexpr NodeTypeInfo type_info{"Rnn", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
                 int get_num_timesteps() const { return m_num_timesteps; }

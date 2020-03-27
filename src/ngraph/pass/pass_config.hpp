@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@
 #pragma once
 
 #include <map>
+#include <string>
+
+#include <ngraph/ngraph_visibility.hpp>
 
 namespace ngraph
 {
@@ -26,7 +29,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::PassConfig
+class NGRAPH_API ngraph::pass::PassConfig
 {
 public:
     PassConfig();

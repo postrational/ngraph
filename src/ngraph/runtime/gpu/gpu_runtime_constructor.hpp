@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,8 +39,8 @@ namespace ngraph
             public:
                 using op_runtime_t =
                     std::function<void(GPUCallFrame& call_frame, GPURuntimeContext* ctx)>;
-                using op_order_t =
-                    std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>;
+                using op_order_t = std::unordered_map<std::shared_ptr<Function>,
+                                                      std::vector<std::shared_ptr<Node>>>;
 
                 GPURuntimeConstructor(const op_order_t& ordered_ops);
                 void add(const std::string& name, const op_runtime_t& step);

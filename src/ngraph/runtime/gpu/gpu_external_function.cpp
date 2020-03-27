@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -153,7 +153,7 @@ std::string runtime::gpu::GPUExternalFunction::emit_op(GPUCompiledFunction* exte
 
 runtime::gpu::GPUExternalFunction::GPUExternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<GPUBackend::BackendContext>& shared_context)
     : GPUCompiledFunction(function, shared_context)
 {
 }
@@ -463,9 +463,9 @@ void runtime::gpu::GPUExternalFunction::emit_functions()
                 m_variable_name_map[tv->get_name()] = ss.str();
 
                 auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
-                //keep assigning different outputs to a result descriptor
-                //op::Result emitter will check if in and out descriptors are the same
-                //and skip a copy
+                // keep assigning different outputs to a result descriptor
+                // op::Result emitter will check if in and out descriptors are the same
+                // and skip a copy
                 auto input_node = res->get_inputs().at(0).get_output().get_node();
                 if (!input_node->is_constant() && !input_node->is_parameter())
                 {

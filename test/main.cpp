@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,13 +17,22 @@
 #include <chrono>
 #include <iostream>
 
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/utils.hpp"
+#endif
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 
 using namespace std;
 
 int main(int argc, char** argv)
 {
+    const string cpath_flag{"--cpath"};
+    string cpath;
     const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
     argv_vector.push_back(argv[0]);
@@ -32,14 +41,29 @@ int main(int argc, char** argv)
     {
         argv_vector.push_back(argv[i]);
     }
-    argc++;
-
+    argc = argv_vector.size();
     ::testing::InitGoogleTest(&argc, argv_vector.data());
-    auto start = std::chrono::system_clock::now();
+    for (int i = 1; i < argc; i++)
+    {
+        if (cpath_flag == argv[i] && (++i) < argc)
+        {
+            cpath = argv[i];
+        }
+    }
+    ngraph::runtime::Backend::set_backend_shared_library_search_directory(cpath);
+#ifdef NGRAPH_CPU_ENABLE
+    ngraph_register_cpu_backend();
+#endif
+#ifdef NGRAPH_INTERPRETER_ENABLE
+    ngraph_register_interpreter_backend();
+#endif
+
+#ifdef NGRAPH_MLIR_ENABLE
+    // Initialize MLIR
+    ngraph::runtime::ngmlir::initializeNGraphMLIR();
+#endif
+
     int rc = RUN_ALL_TESTS();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now() - start);
-    NGRAPH_DEBUG_PRINT("[MAIN] Tests finished: Time: %d ms Exit code: %d", elapsed.count(), rc);
 
     return rc;
 }

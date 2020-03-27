@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/op_tbl.hpp"
+#include "ngraph/op/op_version_tbl.hpp"
 #if CUDNN_VERSION >= 7200
-NGRAPH_OP(Rnn, ngraph::op::gpu)
+NGRAPH_OP(Rnn, ngraph::op::gpu, 0)
 #endif
-NGRAPH_OP(BatchNormTrainingWithStats, ngraph::op::gpu)
+NGRAPH_OP(BatchNormTrainingWithStats, ngraph::op::gpu, 0)

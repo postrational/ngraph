@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <set>
 #include <sstream>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::BatchNormTraining::type_name{"BatchNormTraining"};
+constexpr NodeTypeInfo op::BatchNormTraining::type_info;
 
 op::BatchNormTraining::BatchNormTraining(const Output<Node>& input,
                                          const Output<Node>& gamma,
@@ -46,6 +45,12 @@ op::BatchNormTraining::BatchNormTraining(double eps,
     , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::BatchNormTraining::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
 }
 
 void op::BatchNormTraining::validate_and_infer_types()
@@ -69,7 +74,8 @@ void op::BatchNormTraining::validate_and_infer_types()
     set_output_type(2, result_et, result_channel_shape);
 }
 
-std::shared_ptr<Node> op::BatchNormTraining::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node>
+    op::BatchNormTraining::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return std::make_shared<BatchNormTraining>(
@@ -77,11 +83,11 @@ std::shared_ptr<Node> op::BatchNormTraining::copy_with_new_args(const NodeVector
 }
 
 void op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
-                                              const NodeVector& deltas)
+                                              const OutputVector& deltas)
 {
-    auto gamma = input(0).get_source_output();
-    auto beta = input(1).get_source_output();
-    auto data = input(2).get_source_output();
+    auto gamma = input_value(0);
+    auto beta = input_value(1);
+    auto data = input_value(2);
 
     // Extract mean and variance outputs from BatchNormBase
     // as these are used by BatchNormTrainingBackprop.
@@ -95,16 +101,16 @@ void op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
 
     auto bbn = std::make_shared<op::BatchNormTrainingBackprop>(
         data, gamma, beta, mean, var, deltas.at(0), get_eps_value());
-    auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
-    auto dgamma = std::make_shared<op::GetOutputElement>(bbn, 1);
-    auto dbeta = std::make_shared<op::GetOutputElement>(bbn, 2);
+    auto dinput = Output<Node>(bbn, 0);
+    auto dgamma = Output<Node>(bbn, 1);
+    auto dbeta = Output<Node>(bbn, 2);
 
     adjoints.add_delta(data, dinput);
     adjoints.add_delta(gamma, dgamma);
     adjoints.add_delta(beta, dbeta);
 }
 
-const string op::BatchNormInference::type_name{"BatchNormInference"};
+constexpr NodeTypeInfo op::BatchNormInference::type_info;
 
 op::BatchNormInference::BatchNormInference(const Output<Node>& input,
                                            const Output<Node>& gamma,
@@ -131,6 +137,12 @@ op::BatchNormInference::BatchNormInference(double eps,
     constructor_validate_and_infer_types();
 }
 
+bool op::BatchNormInference::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
+}
+
 void op::BatchNormInference::validate_and_infer_types()
 {
     element::Type result_et;
@@ -154,14 +166,15 @@ void op::BatchNormInference::validate_and_infer_types()
     set_output_type(0, result_et, result_batch_shape);
 }
 
-std::shared_ptr<Node> op::BatchNormInference::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node>
+    op::BatchNormInference::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return std::make_shared<BatchNormInference>(
         new_args.at(2), new_args.at(0), new_args.at(1), new_args.at(3), new_args.at(4), m_epsilon);
 }
 
-const string op::BatchNormTrainingBackprop::type_name{"BatchNormTrainingBackprop"};
+constexpr NodeTypeInfo op::BatchNormTrainingBackprop::type_info;
 
 op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(const Output<Node>& input,
                                                          const Output<Node>& gamma,
@@ -191,6 +204,12 @@ op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(double epsilon,
 {
     set_output_size(3);
     constructor_validate_and_infer_types();
+}
+
+bool op::BatchNormTrainingBackprop::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
 }
 
 void op::BatchNormTrainingBackprop::validate_and_infer_types()
@@ -241,7 +260,7 @@ void op::BatchNormTrainingBackprop::validate_and_infer_types()
 }
 
 std::shared_ptr<Node>
-    op::BatchNormTrainingBackprop::copy_with_new_args(const NodeVector& new_args) const
+    op::BatchNormTrainingBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return std::make_shared<op::BatchNormTrainingBackprop>(new_args.at(2),

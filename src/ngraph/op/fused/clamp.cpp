@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Clamp::Clamp(const shared_ptr<Node>& data, const double min, const double max)
-    : FusedOp("Clamp", {data})
+constexpr NodeTypeInfo op::Clamp::type_info;
+
+op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
+    : FusedOp({data})
     , m_min{min}
     , m_max{max}
 {
@@ -34,15 +36,16 @@ void op::Clamp::pre_validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(
         this, m_min < m_max, "The 'min' parameter needs to be less than 'max' for Clamp");
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
 NodeVector op::Clamp::decompose_op() const
 {
-    const auto data = get_argument(0);
-    const auto data_shape = data->get_shape();
+    const auto data = input_value(0);
+    const auto data_shape = data.get_shape();
 
-    const auto clamp_min = builder::make_constant(data->get_element_type(), data_shape, m_min);
-    const auto clamp_max = builder::make_constant(data->get_element_type(), data_shape, m_max);
+    const auto clamp_min = builder::make_constant(data.get_element_type(), data_shape, m_min);
+    const auto clamp_max = builder::make_constant(data.get_element_type(), data_shape, m_max);
 
     return {std::make_shared<ngraph::op::Minimum>(
         clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
@@ -56,4 +59,11 @@ shared_ptr<Node> op::Clamp::copy_with_new_args(const NodeVector& new_args) const
                           new_args.size());
 
     return make_shared<Clamp>(new_args.at(0), m_min, m_max);
+}
+
+bool op::Clamp::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("min", m_min);
+    visitor.on_attribute("max", m_max);
+    return true;
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,14 @@
 //*****************************************************************************
 
 #include "ngraph/op/experimental/shape_of.hpp"
-#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::ShapeOf::ShapeOf(const shared_ptr<Node>& arg)
-    : Op("ShapeOf", check_single_output_args({arg}))
+constexpr NodeTypeInfo op::ShapeOf::type_info;
+
+op::ShapeOf::ShapeOf(const Output<Node>& arg)
+    : Op({arg})
 {
     constructor_validate_and_infer_types();
 }
@@ -30,6 +31,11 @@ void op::ShapeOf::validate_and_infer_types()
 {
     set_input_is_relevant_to_value(0, false);
     set_output_type(0, element::i64, PartialShape{get_input_partial_shape(0).rank()});
+}
+
+bool ngraph::op::v0::ShapeOf::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }
 
 shared_ptr<Node> op::ShapeOf::copy_with_new_args(const NodeVector& new_args) const

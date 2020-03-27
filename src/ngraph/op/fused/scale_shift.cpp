@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,29 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 #include "scale_shift.hpp"
+
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::ScaleShift::ScaleShift(const std::shared_ptr<ngraph::Node>& data,
-                           const std::shared_ptr<ngraph::Node>& scale,
-                           const std::shared_ptr<ngraph::Node>& shift)
-    : FusedOp("ScaleShift", {data, scale, shift})
+constexpr NodeTypeInfo op::ScaleShift::type_info;
+
+op::ScaleShift::ScaleShift(const Output<Node>& data,
+                           const Output<Node>& scale,
+                           const Output<Node>& shift)
+    : FusedOp({data, scale, shift})
 {
     constructor_validate_and_infer_types();
 }
 
 NodeVector op::ScaleShift::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto scale = get_argument(1);
-    auto shift = get_argument(2);
+    auto data = input_value(0);
+    auto scale = input_value(1);
+    auto shift = input_value(2);
 
     // broadcast all data
-    auto broadcasted_nodes = numpy_style_broadcast({data, scale, shift});
+    auto broadcasted_nodes = builder::numpy_broadcast_outputs({data, scale, shift});
     data = broadcasted_nodes[0];
     scale = broadcasted_nodes[1];
     shift = broadcasted_nodes[2];

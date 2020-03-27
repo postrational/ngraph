@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #include <iterator>
 
 #include "grn.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/builder/reshape.hpp"
@@ -27,11 +28,19 @@
 using namespace std;
 using namespace ngraph;
 
-op::GRN::GRN(const shared_ptr<Node>& data, float bias)
-    : FusedOp("GRN", {data})
+constexpr NodeTypeInfo op::GRN::type_info;
+
+op::GRN::GRN(const Output<Node>& data, float bias)
+    : FusedOp({data})
     , m_bias(bias)
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::GRN::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("bias", m_bias);
+    return true;
 }
 
 void op::GRN::pre_validate_and_infer_types()
@@ -54,8 +63,8 @@ void op::GRN::pre_validate_and_infer_types()
 
 NodeVector op::GRN::decompose_op() const
 {
-    shared_ptr<Node> data{get_argument(0)};
-    const Shape& input_shape{data->get_shape()};
+    Output<Node> data{input_value(0)};
+    const Shape& input_shape{data.get_shape()};
 
     // Reshape to 4D tensor.
     if (input_shape.size() != 4)
@@ -66,9 +75,9 @@ NodeVector op::GRN::decompose_op() const
     }
 
     // Calculate l2 norm across channels.
-    shared_ptr<Node> norm = builder::l2_norm(data, AxisSet{1}, m_bias);
+    shared_ptr<Node> norm = builder::opset1::l2_norm(data, AxisSet{1}, m_bias);
     // Get back reduced axis.
-    norm = std::make_shared<Broadcast>(norm, data->get_shape(), AxisSet{1});
+    norm = std::make_shared<Broadcast>(norm, data.get_shape(), AxisSet{1});
     data = data / norm;
 
     // get back original input tensor rank
@@ -77,7 +86,7 @@ NodeVector op::GRN::decompose_op() const
         data = builder::reshape(data, input_shape);
     }
 
-    return {data};
+    return as_node_vector({data});
 }
 
 shared_ptr<Node> op::GRN::copy_with_new_args(const NodeVector& new_args) const

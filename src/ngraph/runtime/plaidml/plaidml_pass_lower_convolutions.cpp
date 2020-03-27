@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -92,12 +92,12 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
         AxisVector rhs_axes = to_axes(rhs, rhs_transpose);
 
         {
-            auto conv = std::dynamic_pointer_cast<ngraph::op::Convolution>(node);
+            auto conv = as_type_ptr<ngraph::op::Convolution>(node);
             if (conv)
             {
                 replace_node(target,
                              std::make_shared<plaidml::op::Convolution>(conv,
-                                                                        NodeVector{lhs, rhs},
+                                                                        OutputVector{lhs, rhs},
                                                                         std::move(lhs_axes),
                                                                         std::move(rhs_axes),
                                                                         std::move(out_axes)));
@@ -106,14 +106,13 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
         }
 
         {
-            auto conv_bp_data =
-                std::dynamic_pointer_cast<ngraph::op::ConvolutionBackpropData>(node);
+            auto conv_bp_data = as_type_ptr<ngraph::op::ConvolutionBackpropData>(node);
             if (conv_bp_data)
             {
                 replace_node(
                     target,
                     std::make_shared<plaidml::op::ConvolutionBackpropData>(conv_bp_data,
-                                                                           NodeVector{lhs, rhs},
+                                                                           OutputVector{lhs, rhs},
                                                                            std::move(lhs_axes),
                                                                            std::move(rhs_axes),
                                                                            std::move(out_axes)));
@@ -122,17 +121,16 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
         }
 
         {
-            auto conv_bp_filters =
-                std::dynamic_pointer_cast<ngraph::op::ConvolutionBackpropFilters>(node);
+            auto conv_bp_filters = as_type_ptr<ngraph::op::ConvolutionBackpropFilters>(node);
             if (conv_bp_filters)
             {
-                replace_node(
-                    target,
-                    std::make_shared<plaidml::op::ConvolutionBackpropFilters>(conv_bp_filters,
-                                                                              NodeVector{lhs, rhs},
-                                                                              std::move(lhs_axes),
-                                                                              std::move(rhs_axes),
-                                                                              std::move(out_axes)));
+                replace_node(target,
+                             std::make_shared<plaidml::op::ConvolutionBackpropFilters>(
+                                 conv_bp_filters,
+                                 OutputVector{lhs, rhs},
+                                 std::move(lhs_axes),
+                                 std::move(rhs_axes),
+                                 std::move(out_axes)));
                 return true;
             }
         }

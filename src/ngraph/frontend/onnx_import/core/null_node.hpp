@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,9 @@ namespace ngraph
         class NullNode : public ngraph::Node
         {
         public:
-            NullNode();
+            static constexpr NodeTypeInfo type_info{"NullNode", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
+            NullNode() = default;
 
             bool is_null() const final override { return true; }
             virtual std::shared_ptr<Node>

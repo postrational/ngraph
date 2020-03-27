@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "null_node.hpp"
+#include <string>
+
 #include "ngraph/node.hpp"
+#include "null_node.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        NullNode::NullNode()
-            : ngraph::Node("NullNode", {}, 0)
-        {
-        }
+        constexpr NodeTypeInfo NullNode::type_info;
 
-        std::shared_ptr<Node> NullNode::copy_with_new_args(const NodeVector& new_args) const
+        std::shared_ptr<Node> NullNode::copy_with_new_args(const NodeVector& /* new_args */) const
         {
             return std::make_shared<NullNode>();
         }

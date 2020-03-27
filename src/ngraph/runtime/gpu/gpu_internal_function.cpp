@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -128,7 +129,7 @@ std::string runtime::gpu::GPUInternalFunction::emit_op(GPUCompiledFunction* comp
 
 runtime::gpu::GPUInternalFunction::GPUInternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<GPUBackend::BackendContext>& shared_context)
     : GPUCompiledFunction(function, shared_context)
 {
 }
@@ -155,7 +156,8 @@ std::string runtime::gpu::GPUInternalFunction::add_to_runtime(
     {
         primitive_invocation = [args, out, primitive_index](GPUCallFrame& call_frame,
                                                             GPURuntimeContext* ctx) mutable {
-            // here, these inputs and outputs could be any of [constant, input, output, intermediate]
+            // here, these inputs and outputs could be any of [constant, input, output,
+            // intermediate]
             auto inputs = call_frame.get_tensor_io(args);
             auto outputs = call_frame.get_tensor_io(out);
             runtime::gpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
@@ -165,7 +167,8 @@ std::string runtime::gpu::GPUInternalFunction::add_to_runtime(
     {
         primitive_invocation = [this, args, out, primitive_index](GPUCallFrame& call_frame,
                                                                   GPURuntimeContext* ctx) mutable {
-            // here, these inputs and outputs could be any of [constant, input, output, intermediate]
+            // here, these inputs and outputs could be any of [constant, input, output,
+            // intermediate]
             auto inputs = call_frame.get_tensor_io(args);
             auto outputs = call_frame.get_tensor_io(out);
             *m_trace << "(";
@@ -277,9 +280,9 @@ void runtime::gpu::GPUInternalFunction::build_functions()
             m_variable_name_map[tv->get_name()] = std::make_tuple(TensorRole::OUTPUT, i, ss.str());
 
             auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
-            //keep assigning different outputs to a result descriptor
-            //op::Result emitter will check if in and out descriptors are the same
-            //and skip a copy
+            // keep assigning different outputs to a result descriptor
+            // op::Result emitter will check if in and out descriptors are the same
+            // and skip a copy
             auto input_node = res->get_inputs().at(0).get_output().get_node();
             if (!input_node->is_constant() && !input_node->is_parameter())
             {
@@ -288,7 +291,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
                 auto output_name = ss.str();
                 m_variable_name_map[itv->get_name()] =
                     std::make_tuple(TensorRole::OUTPUT, i, ss.str());
-                //propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
+                // propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
             }
         }
 
@@ -386,7 +389,7 @@ void runtime::gpu::GPUInternalFunction::emit()
     m_runtime_constructor =
         runtime::gpu::make_unique<GPURuntimeConstructor>(m_function_ordered_ops);
 
-    if (std::getenv("NGRAPH_GPU_TRACE"))
+    if (getenv_bool("NGRAPH_GPU_TRACE"))
     {
         m_trace = std::make_shared<CodeWriter>();
     }

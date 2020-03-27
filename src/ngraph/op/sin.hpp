@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,9 @@ namespace ngraph
 {
     namespace op
     {
+        namespace v0
+        {
+            // clang-format off
         /// \brief Elementwise sine operation.
         ///
         /// ## Inputs
@@ -35,20 +38,27 @@ namespace ngraph
         /// | Type                   | Description                                                                          |
         /// | ---------------------- | ------------------------------------------------------------------------------------ |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \sin(\texttt{arg}[i_1,\dots,i_n])\f$ |
-        class Sin : public util::UnaryElementwiseArithmetic
-        {
-        public:
-            /// \brief Constructs a sine operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Sin(const std::shared_ptr<Node>& arg);
+            // clang-format on
+            class NGRAPH_API Sin : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Sin", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a sine operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Sin(const Output<Node>& arg);
+                Sin() = default;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
+            };
+        }
+        using v0::Sin;
     }
 }

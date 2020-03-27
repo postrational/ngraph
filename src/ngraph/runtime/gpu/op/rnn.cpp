@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,13 @@
 
 #include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+constexpr NodeTypeInfo op::gpu::Rnn::type_info;
 
 shared_ptr<Node> op::gpu::Rnn::copy_with_new_args(const NodeVector& new_args) const
 {

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ReplaceSlice::type_name{"ReplaceSlice"};
+constexpr NodeTypeInfo op::ReplaceSlice::type_info;
 
 op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
                                const Output<Node>& arg1,
@@ -116,7 +116,8 @@ void op::ReplaceSlice::validate_and_infer_types()
     }
 
     NODE_VALIDATION_CHECK(this,
-                          merged_args_rank.is_dynamic() || size_t(merged_args_rank) == output_rank,
+                          merged_args_rank.is_dynamic() ||
+                              merged_args_rank.get_length() == output_rank,
                           "Argument ranks do not match the rank of the lower bounds (",
                           m_lower_bounds,
                           "), upper bounds (",
@@ -131,7 +132,7 @@ void op::ReplaceSlice::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(this,
                               arg0_shape.rank().is_dynamic() || arg0_shape[i].is_dynamic() ||
-                                  m_upper_bounds[i] <= size_t(arg0_shape[i]),
+                                  m_upper_bounds[i] <= arg0_shape[i].get_length(),
                               "Upper bound for slice at axis ",
                               i,
                               " is out of range ",
@@ -174,14 +175,14 @@ shared_ptr<Node> op::ReplaceSlice::copy_with_new_args(const NodeVector& new_args
         new_args.at(0), new_args.at(1), m_lower_bounds, m_upper_bounds, m_strides);
 }
 
-void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
-    auto& y_element_type = input(1).get_element_type();
-    auto y_shape = input(1).get_shape();
+    auto x = input_value(0);
+    auto y = input_value(1);
+    auto& y_element_type = y.get_element_type();
+    auto y_shape = y.get_shape();
 
     auto zeros_shaped_like_y = op::Constant::create(y_element_type, y_shape, {0.0});
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ using namespace ngraph;
 //
 // Tests for binary elementwise ops.
 //
-void test_binary(std::string node_type,
+void test_binary(std::string /* node_type */,
                  shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y))
 {
     // Check for bad arguments
@@ -115,7 +115,7 @@ TEST(type_prop, subtract_bad_arguments)
 //
 // Tests for binary elementwise logical ops.
 //
-void test_binary_logical(std::string node_type,
+void test_binary_logical(std::string /* node_type */,
                          shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y))
 {
     // Check for bad arguments
@@ -209,6 +209,14 @@ TEST(type_prop, or_bad_arguments)
         });
 }
 
+TEST(type_prop, xor_bad_arguments)
+{
+    test_binary_logical(
+        "Xor", [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+            return make_shared<op::Xor>(x, y);
+        });
+}
+
 template <typename T>
 void test_binary_eltwise_numpy(const element::Type& et, const op::AutoBroadcastSpec& autob)
 {
@@ -242,6 +250,7 @@ TEST(type_prop, eltwise_auto_bcast)
     test_binary_eltwise_numpy<op::Or>(element::boolean, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::Power>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::Subtract>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Xor>(element::boolean, op::AutoBroadcastType::NUMPY);
 }
 
 TEST(type_prop, comparison_good)

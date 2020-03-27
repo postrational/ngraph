@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,14 +20,16 @@
 using namespace std;
 using namespace ngraph;
 
-op::Quantize::Quantize(const shared_ptr<Node>& input,
-                       const shared_ptr<Node>& scale,
-                       const shared_ptr<Node>& zero_point,
+constexpr NodeTypeInfo op::Quantize::type_info;
+
+op::Quantize::Quantize(const Output<Node>& input,
+                       const Output<Node>& scale,
+                       const Output<Node>& zero_point,
                        const element::Type& type,
                        const AxisSet& axes,
                        RoundMode round_mode)
 
-    : Op("Quantize", check_single_output_args({input, scale, zero_point}))
+    : Op({input, scale, zero_point})
     , m_type(type)
     , m_axes(axes)
     , m_round_mode(round_mode)
@@ -84,7 +86,7 @@ void op::Quantize::validate_and_infer_types()
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_CHECK(this,
-                              input_rank.is_dynamic() || axis < size_t(input_rank),
+                              input_rank.is_dynamic() || axis < input_rank.get_length(),
                               "Quantization axis (",
                               axis,
                               ") must be less than input shape rank (",
@@ -120,7 +122,7 @@ void op::Quantize::validate_and_infer_types()
 
         vector<Dimension> injected_scale_zero_point_dims;
 
-        for (size_t j = 0; j < size_t(input_shape.rank()); j++)
+        for (size_t j = 0; j < input_shape.rank().get_length(); j++)
         {
             if (m_axes.count(j) != 0)
             {
@@ -158,7 +160,8 @@ shared_ptr<Node> op::Quantize::copy_with_new_args(const NodeVector& new_args) co
         new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes, m_round_mode);
 }
 
-void op::Quantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Quantize::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                     const OutputVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include "deconv.hpp"
 
+#include "ngraph/log.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/util.hpp"
@@ -26,17 +27,19 @@
 using namespace std;
 using namespace ngraph;
 
+constexpr NodeTypeInfo op::DeconvolutionBias::type_info;
+
 op::DeconvolutionBias::DeconvolutionBias(const Shape& data_batch_shape,
-                                         const shared_ptr<Node>& filters,
-                                         const shared_ptr<Node>& output_delta,
-                                         const shared_ptr<Node>& bias,
+                                         const Output<Node>& filters,
+                                         const Output<Node>& output_delta,
+                                         const Output<Node>& bias,
                                          const Strides& window_movement_strides_forward,
                                          const Strides& window_dilation_strides_forward,
                                          const CoordinateDiff& padding_below_forward,
                                          const CoordinateDiff& padding_above_forward,
                                          const Strides& data_dilation_strides_forward,
                                          const bool with_relu)
-    : Op("DeconvolutionBias", check_single_output_args({filters, output_delta, bias}))
+    : Op({filters, output_delta, bias})
     , m_data_batch_shape(data_batch_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
     , m_window_dilation_strides_forward(window_dilation_strides_forward)
@@ -46,8 +49,8 @@ op::DeconvolutionBias::DeconvolutionBias(const Shape& data_batch_shape,
     , m_with_relu(with_relu)
 {
     NGRAPH_DEBUG << "DeconvolutionBias ctor" << endl;
-    NGRAPH_DEBUG << "data: " << data_batch_shape << ", filters: " << filters->get_shape()
-                 << ", output_delta: " << output_delta->get_shape();
+    NGRAPH_DEBUG << "data: " << data_batch_shape << ", filters: " << filters.get_shape()
+                 << ", output_delta: " << output_delta.get_shape();
     constructor_validate_and_infer_types();
 }
 
@@ -71,7 +74,8 @@ void op::DeconvolutionBias::validate_and_infer_types()
     // Window movement strides  q_x       p_x
     // Window dilation strides  p_f       p_f
     // Padding below            a_x       (S_f - 1)p_f - a_x
-    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q_x) - b_x
+    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f)
+    //                                    % q_x) - b_x
     // Data dilation strides    p_x       q_x
     // Output shape             S_o       S_x
     //
@@ -135,14 +139,13 @@ void op::DeconvolutionBias::validate_and_infer_types()
                           ").");
 
     NODE_VALIDATION_CHECK(this,
-                          static_cast<size_t>(bias_shape.rank()) == 1,
+                          bias_shape.rank().get_length() == 1,
                           "bias_shape size(",
                           bias_shape.rank(),
                           ") is not equal to 1");
 
     NODE_VALIDATION_CHECK(this,
-                          static_cast<size_t>(bias_shape[0]) ==
-                              static_cast<size_t>(filters_shape[0]),
+                          bias_shape[0].get_length() == filters_shape[0].get_length(),
                           "Filter input channel count (",
                           filters_shape,
                           ") does not compatible with ",
@@ -153,8 +156,8 @@ void op::DeconvolutionBias::validate_and_infer_types()
     set_output_type(0, forward_result_et, m_data_batch_shape);
 }
 
-void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
-                                              const NodeVector& deltas)
+void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                              const OutputVector& /* deltas */)
 {
     throw ngraph_error("DeconvolutionBias generate_adjoints not supported implemented");
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,12 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::UpdateSlice::UpdateSlice(const shared_ptr<Node>& arg0,
-                             const shared_ptr<Node>& arg1,
+constexpr NodeTypeInfo op::UpdateSlice::type_info;
+
+op::UpdateSlice::UpdateSlice(const Output<Node>& arg0,
+                             const Output<Node>& arg1,
                              const Coordinate& lower_bounds,
                              const Coordinate& upper_bounds,
                              const Strides& strides)
-    : Op("UpdateSlice", check_single_output_args({arg0, arg1}))
+    : Op({arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(strides)
@@ -32,11 +34,11 @@ op::UpdateSlice::UpdateSlice(const shared_ptr<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-op::UpdateSlice::UpdateSlice(const shared_ptr<Node>& arg0,
-                             const shared_ptr<Node>& arg1,
+op::UpdateSlice::UpdateSlice(const Output<Node>& arg0,
+                             const Output<Node>& arg1,
                              const Coordinate& lower_bounds,
                              const Coordinate& upper_bounds)
-    : Op("UpdateSlice", check_single_output_args({arg0, arg1}))
+    : Op({arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(Strides(lower_bounds.size(), 1))
@@ -112,7 +114,8 @@ void op::UpdateSlice::validate_and_infer_types()
     }
 
     NODE_VALIDATION_CHECK(this,
-                          merged_args_rank.is_dynamic() || size_t(merged_args_rank) == output_rank,
+                          merged_args_rank.is_dynamic() ||
+                              merged_args_rank.get_length() == output_rank,
                           "Argument ranks do not match the rank of the lower bounds (",
                           m_lower_bounds,
                           "), upper bounds (",
@@ -127,7 +130,7 @@ void op::UpdateSlice::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(this,
                               arg0_shape.rank().is_dynamic() || arg0_shape[i].is_dynamic() ||
-                                  m_upper_bounds[i] <= size_t(arg0_shape[i]),
+                                  m_upper_bounds[i] <= arg0_shape[i].get_length(),
                               "Upper bound for slice at axis ",
                               i,
                               " is out of range ",

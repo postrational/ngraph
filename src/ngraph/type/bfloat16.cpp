@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,8 @@ std::vector<float> bfloat16::to_float_vector(const std::vector<bfloat16>& v_bf16
 
 std::vector<bfloat16> bfloat16::from_float_vector(const std::vector<float>& v_f32)
 {
-    std::vector<bfloat16> v_bf16(v_f32.size());
+    std::vector<bfloat16> v_bf16;
+    v_bf16.reserve(v_f32.size());
     for (float a : v_f32)
     {
         v_bf16.push_back(static_cast<bfloat16>(a));
@@ -75,10 +76,14 @@ size_t bfloat16::size() const
 
 bool bfloat16::operator==(const bfloat16& other) const
 {
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
     return (static_cast<float>(*this) == static_cast<float>(other));
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
 }
 
 bool bfloat16::operator<(const bfloat16& other) const

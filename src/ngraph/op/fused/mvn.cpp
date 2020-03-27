@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,41 +18,28 @@
 #include "mvn.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::MVN::MVN(const std::shared_ptr<Node>& data,
-             bool across_channels,
-             bool normalize_variance,
-             double eps)
-    : FusedOp("MVN", {data})
+constexpr NodeTypeInfo op::MVN::type_info;
+
+op::MVN::MVN(const Output<Node>& data, bool across_channels, bool normalize_variance, double eps)
+    : FusedOp({data})
     , m_eps{eps}
     , m_across_channels{across_channels}
     , m_normalize_variance{normalize_variance}
 {
     constructor_validate_and_infer_types();
-
-    // if m_across_channels is true we should calculate mean and variance per batch
-    // else we calculate these per channel
-    m_reduction_axes.insert(0);
-    size_t start_axis = m_across_channels ? 1 : 2;
-    for (size_t i = start_axis; i < data->get_shape().size(); ++i)
-    {
-        m_reduction_axes.insert(i);
-    }
 }
 
-op::MVN::MVN(const std::shared_ptr<Node>& data,
-             AxisSet reduction_axes,
-             bool normalize_variance,
-             double eps)
-    : FusedOp("MVN", {data})
+op::MVN::MVN(const Output<Node>& data, AxisSet reduction_axes, bool normalize_variance, double eps)
+    : FusedOp({data})
     , m_eps{eps}
     , m_across_channels{false}
     , m_normalize_variance{normalize_variance}
@@ -61,10 +48,32 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+// decompose_op() relies on knowing the data type of input data which might
+// not be available at shape inference time. So do direct shape inference
+// instead of relying on op decomposition.
+void op::MVN::validate_and_infer_types()
+{
+    // if m_across_channels is true we should calculate mean and variance per batch
+    // else we calculate these per channel
+    if (m_reduction_axes.empty() && input_value(0).get_partial_shape().rank().is_static())
+    {
+        AxisSet reduction_axes;
+        reduction_axes.insert(0);
+        size_t start_axis = m_across_channels ? 1 : 2;
+        for (size_t i = start_axis; i < input_value(0).get_partial_shape().rank().get_length(); ++i)
+        {
+            reduction_axes.insert(i);
+        }
+        set_reduction_axes(reduction_axes);
+    }
+
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
+}
+
 NodeVector op::MVN::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto data_shape = data->get_shape(); // assume that data has n and c channels.
+    auto data = input_value(0);
+    auto data_shape = data.get_shape(); // assume that data has n and c channels.
 
     // calculate mean normalization
     auto mean = builder::mean(data, m_reduction_axes);
@@ -82,11 +91,11 @@ NodeVector op::MVN::decompose_op() const
         variance = make_shared<op::Sqrt>(variance);
         // add epsilon
         auto eps_node = op::Constant::create(
-            data->get_element_type(), variance->get_shape(), vector<double>{m_eps});
+            data.get_element_type(), Output<Node>(variance).get_shape(), vector<double>{m_eps});
         variance = variance + eps_node;
         variance = std::make_shared<op::Broadcast>(variance, data_shape, m_reduction_axes);
 
-        return {mean_normalization / variance};
+        return as_node_vector({mean_normalization / variance});
     }
 }
 

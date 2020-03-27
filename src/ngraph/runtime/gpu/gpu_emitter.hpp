@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ namespace ngraph
 // This defines a collection of function declarations like this
 // static std::string emit_Abs(EMIT_ARGS);
 // static std::string emit_Acos(EMIT_ARGS);
-#define NGRAPH_OP(a, b) static std::string emit_##a(EMIT_ARGS);
+#define NGRAPH_OP(a, b, VERS) static std::string emit_v##VERS##_##a(EMIT_ARGS);
 #include "ngraph/runtime/gpu/op/op_tbl.hpp"
 #undef NGRAPH_OP
 

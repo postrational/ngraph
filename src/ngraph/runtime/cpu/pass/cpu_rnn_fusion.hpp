@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,11 +45,13 @@ public:
     {
         construct_sigmoid();
         construct_lstm_fprop();
+        construct_onnx_lstmcell_fprop();
     }
 
 private:
     void construct_sigmoid();
     void construct_lstm_fprop();
+    void construct_onnx_lstmcell_fprop();
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::RNNFusion

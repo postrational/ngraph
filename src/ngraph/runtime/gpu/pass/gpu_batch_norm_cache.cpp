@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,8 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
     {
         if (auto bnbp = std::dynamic_pointer_cast<op::BatchNormTrainingBackprop>(n))
         {
-            // batch norm bprop annotations are used to indicate if variance is in inverse stddev format
+            // batch norm bprop annotations are used to indicate if variance is in inverse stddev
+            // format
             auto op_annotations =
                 std::make_shared<ngraph::runtime::gpu::BatchNormBackpropAnnotations>();
 
@@ -46,7 +47,7 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
                 if (auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(arg))
                 {
                     if (auto bn = std::dynamic_pointer_cast<op::BatchNormTraining>(
-                            goe->input(0).get_source_output().get_node_shared_ptr()))
+                            goe->get_input_node_shared_ptr(0)))
                     {
                         goes.push_back(goe);
                     }
@@ -57,7 +58,7 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
             if (goes.size())
             {
                 if (auto target = std::dynamic_pointer_cast<op::BatchNormTraining>(
-                        goes.front()->input(0).get_source_output().get_node_shared_ptr()))
+                        goes.front()->get_input_node_shared_ptr(0)))
                 {
                     auto replacement = std::make_shared<op::gpu::BatchNormTrainingWithStats>(
                         target->get_eps_value(),
