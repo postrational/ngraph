@@ -62,8 +62,7 @@ runtime::Backend::~Backend()
 {
 }
 
-std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string& /* op_name */,
-                                                               ...)
+std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string&, ...)
 {
     std::shared_ptr<ngraph::Node> dummy_node(nullptr);
     return dummy_node;
@@ -90,42 +89,40 @@ vector<string> runtime::Backend::get_registered_devices()
 }
 
 std::shared_ptr<ngraph::runtime::Tensor>
-    runtime::Backend::create_dynamic_tensor(const ngraph::element::Type& /* element_type */,
-                                            const PartialShape& /* shape */)
+    runtime::Backend::create_dynamic_tensor(const ngraph::element::Type&, const PartialShape&)
 {
     throw std::invalid_argument("This backend does not support dynamic tensors");
 }
 
-std::shared_ptr<runtime::Executable>
-    runtime::Backend::compile(std::shared_ptr<Function> func,
-                              ngraph::pass::PassConfig& /* pass_config */,
-                              bool enable_performance_data)
+std::shared_ptr<runtime::Executable> runtime::Backend::compile(const Function& func,
+                                                               ngraph::pass::PassConfig&,
+                                                               bool enable_performance_data)
 {
     return compile(func, enable_performance_data);
 }
 
-bool runtime::Backend::is_supported(const Node& /* node */) const
+bool runtime::Backend::is_supported(const Node&) const
 {
     // The default behavior is that a backend does not support any ops. If this is not the case
     // then override this method and enhance.
     return false;
 }
 
-bool runtime::Backend::is_supported_property(const Property /* prop */) const
+bool runtime::Backend::is_supported_property(const Property) const
 {
     return false;
 }
 
-void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> /* exec */)
+void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable>)
 {
 }
 
-std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& /* input_stream */)
+std::shared_ptr<runtime::Executable> runtime::Backend::load(istream&)
 {
     throw runtime_error("load operation unimplemented.");
 }
 
-bool runtime::Backend::is_device_memory(void* /* ptr */)
+bool runtime::Backend::is_device_memory(void*)
 {
     // override this method for each supported backend to determine if the passed pointer is in
     // device pinned memory or not
@@ -147,7 +144,7 @@ const string& runtime::Backend::get_backend_shared_library_search_directory()
     return s_backend_shared_library_search_directory;
 }
 
-bool runtime::Backend::set_config(const map<string, string>& /* config */, string& error)
+bool runtime::Backend::set_config(const map<string, string>&, string& error)
 {
     error = "set_config not supported";
     return false;

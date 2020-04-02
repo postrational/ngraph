@@ -222,7 +222,7 @@ namespace ngraph
         }
 
         bool supports_dynamic_tensors() { return true; }
-        std::shared_ptr<Executable> compile(std::shared_ptr<Function> func)
+        std::shared_ptr<Executable> compile(const Function& func)
         {
             return std::make_shared<Executable>(func, device);
         }

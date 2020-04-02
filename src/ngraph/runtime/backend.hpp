@@ -101,14 +101,14 @@ public:
     /// \brief Compiles a Function.
     /// \param func The function to compile
     /// \returns compiled function or nullptr on failure
-    virtual std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
+    virtual std::shared_ptr<Executable> compile(const Function& func,
                                                 bool enable_performance_data = false) = 0;
 
     /// \brief Compiles a Function.
     /// \param func The function to compile
     /// \param pass_config Configuration object for defining compilation options
     /// \returns compiled function or nullptr on failure
-    virtual std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
+    virtual std::shared_ptr<Executable> compile(const Function& func,
                                                 ngraph::pass::PassConfig& pass_config,
                                                 bool enable_performance_data = false);
 

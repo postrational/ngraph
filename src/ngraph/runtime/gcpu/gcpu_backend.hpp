@@ -52,7 +52,7 @@ public:
 
     std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
-    std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
+    std::shared_ptr<Executable> compile(const Function& function,
                                         bool enable_performance_data = false) override;
 
     bool is_supported(const Node& node) const override;

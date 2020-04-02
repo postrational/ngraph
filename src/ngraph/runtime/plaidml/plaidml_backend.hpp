@@ -50,7 +50,7 @@ public:
     // N.B. The returned Executable will always be an instance of
     //      PlaidML_Executable, and may be safely converted via static
     //      casting.
-    std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
+    std::shared_ptr<Executable> compile(const Function& func,
                                         bool enable_performance_data = false) final;
 
     bool is_supported(const Node& node) const final;
