@@ -24,6 +24,7 @@
 
 #include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/tensor.hpp"
 

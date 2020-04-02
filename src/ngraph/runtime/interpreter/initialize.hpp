@@ -16,15 +16,27 @@
 
 #pragma once
 
-#include <string>
+#include "ngraph/log.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 
-#include "ngraph/ngraph_visibility.hpp"
-#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
-#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
-#include "ngraph/runtime/nop/nop_backend_visibility.hpp"
-#include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
-
-extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend();
-extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend();
-extern "C" PLAIDML_BACKEND_API void ngraph_register_plaidml_backend();
-extern "C" NOP_BACKEND_API void ngraph_register_nop_backend();
+#ifdef NGRAPH_INTERPRETER_ENABLE
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace interpreter
+        {
+            bool init()
+            {
+                NGRAPH_INFO  << "*********************************";
+                ngraph::runtime::BackendManager::register_backend(
+                    "INTERPRETER", [](const std::string&) {
+                        return std::make_shared<ngraph::runtime::interpreter::INTBackend>();
+                    });
+            }
+            static bool s_interpreter_init = init();
+        }
+    }
+}
+#endif
