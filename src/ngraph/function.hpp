@@ -27,6 +27,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -36,6 +37,9 @@ namespace ngraph
     public:
         static constexpr DiscreteTypeInfo type_info{"Function", 0};
         const DiscreteTypeInfo& get_type_info() const { return type_info; }
+
+        Function();
+
         Function(const NodeVector& results,
                  const ParameterVector& parameters,
                  const std::string& name = "");
@@ -56,6 +60,13 @@ namespace ngraph
 
         virtual ~Function() {}
     public:
+        template<class OP, class... Args>
+        std::shared_ptr<ngraph::op::Op> add(Args&&... args)
+        {
+            return std::make_shared<OP>(args...);
+        }
+        void set_result(ngraph::Node* node);
+
         /// Return the number of outputs for this function.
         size_t get_output_size() const;
 

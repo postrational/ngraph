@@ -30,6 +30,10 @@ constexpr DiscreteTypeInfo Function::type_info;
 
 atomic<size_t> Function::m_next_instance_id(0);
 
+Function::Function() : Lambda(OutputVector{}, ParameterVector{})
+{
+}
+
 Function::Function(const ResultVector& results,
                    const ParameterVector& parameters,
                    const std::string& name)

@@ -29,10 +29,16 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, abc)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
+    shared_ptr<ngraph::Function> f;
+    auto A = f->add<op::Parameter>(element::f32, shape);
+    auto B = f->add<op::Parameter>(element::f32, shape);
+    auto C = f->add<op::Parameter>(element::f32, shape);
+    auto R = (A + B) * C;
+    f->set_result(R.get());
+    // auto A = make_shared<op::Parameter>(element::f32, shape);
+    // auto B = make_shared<op::Parameter>(element::f32, shape);
+    // auto C = make_shared<op::Parameter>(element::f32, shape);
+    // auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
