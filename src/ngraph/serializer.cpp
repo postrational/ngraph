@@ -279,10 +279,6 @@ protected:
 class JSONDeserializer
 {
 public:
-    JSONDeserializer()
-        : m_factory_registry(FactoryRegistry<Node>::get())
-    {
-    }
     void set_const_data_callback(function<const_data_callback_t> const_data_callback)
     {
         m_const_data_callback = const_data_callback;
@@ -304,7 +300,6 @@ protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
     unordered_map<string, shared_ptr<Function>> m_function_map;
     function<const_data_callback_t> m_const_data_callback;
-    FactoryRegistry<Node>& m_factory_registry;
 };
 
 static string
@@ -913,34 +908,23 @@ struct OutputVectorHelper
 
 shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 {
+    auto& factory_registry = FactoryRegistry<Node>::get();
     shared_ptr<Node> node;
     try
     {
         string node_op = node_js.at("op").get<string>();
         size_t op_version = get_value<size_t>(node_js, "op_version");
-        NodeTypeInfo type_info{node_op.c_str(), op_version};
-        string type_info_name;
-        if (has_key(node_js, "type_info"))
-        {
-            json jtype_info = node_js["type_info"];
-            type_info_name = jtype_info.at("name").get<string>();
-            type_info.name = type_info_name.c_str();
-            type_info.version = jtype_info.at("version").get<uint64_t>();
-        }
+        Node::type_info_t type_info{node_op.c_str(), op_version};
         string node_name = node_js.at("name").get<string>();
         string friendly_name = get_value<string>(node_js, "friendly_name");
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
-        if (has_key(node_js, "type_info"))
+        if (has_key(node_js, "attribute_visitor"))
         {
-            json ti = node_js["type_info"];
-            string type_info_name = ti.at("name").get<string>();
-            uint64_t type_info_version = ti.at("version").get<int64_t>();
-            NodeTypeInfo type_info{type_info_name.c_str(), type_info_version};
-            if (m_factory_registry.has_factory(type_info))
+            if (factory_registry.has_factory(type_info))
             {
-                node = shared_ptr<Node>(m_factory_registry.create(type_info));
+                node = shared_ptr<Node>(factory_registry.create(type_info));
                 JSONAttributeDeserializer visitor(node_js);
                 node->set_arguments(static_cast<OutputVector>(args));
                 node->visit_attributes(visitor);
@@ -3347,15 +3331,15 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         node["provenance_tags"] = provenance_tags;
     }
-
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
+// #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
     switch (get_typeid(type_info))
     {
+#if 0
     case OP_TYPEID::Abs: { break;
     }
     case OP_TYPEID::Acos: { break;
@@ -3559,6 +3543,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["axis"] = tmp->get_concatenation_axis();
         break;
     }
+#endif
     case OP_TYPEID::Constant:
     {
         auto tmp = static_cast<const op::Constant*>(&n);
@@ -4855,6 +4840,20 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::VariadicSplit_v1: { break;
     }
     case OP_TYPEID::UnknownOp: { break;
+    }
+    default:
+    {
+        auto& factory_registry = FactoryRegistry<Node>::get();
+        if (factory_registry.has_factory(type_info))
+        {
+            node["attribute_visitor"] = true;
+            JSONAttributeSerializer visitor(node);
+            if (!const_cast<Node&>(n).visit_attributes(visitor))
+            {
+                NGRAPH_ERR << "Cannot serialize: " << node;
+            }
+            return node;
+        }
     }
     }
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
