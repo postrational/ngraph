@@ -118,9 +118,6 @@ public:
         m_json[name] = value;
     }
     void on_attribute(const std::string& name, bool& value) override { m_json[name] = value; }
-    void on_attribute(const std::string& name, double& value) override { m_json[name] = value; }
-    void on_attribute(const std::string& name, int64_t& value) override { m_json[name] = value; }
-    void on_attribute(const std::string& name, uint64_t& value) override { m_json[name] = value; }
     void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
     {
         if (auto a = as_type<AttributeAdapter<element::Type>>(&adapter))
@@ -136,7 +133,24 @@ public:
     {
         m_json[name] = adapter.get();
     }
+    void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+    void on_adapter(const std::string& name, ValueAccessor<double>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
     void on_adapter(const std::string& name, ValueAccessor<std::vector<int64_t>>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::vector<float>>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+    void on_adapter(const std::string& name,
+                    ValueAccessor<std::vector<std::string>>& adapter) override
     {
         m_json[name] = adapter.get();
     }
@@ -198,27 +212,6 @@ public:
             value = m_json.at(name).get<bool>();
         }
     }
-    void on_attribute(const std::string& name, double& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<double>();
-        }
-    }
-    void on_attribute(const std::string& name, int64_t& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<int64_t>();
-        }
-    }
-    void on_attribute(const std::string& name, uint64_t& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<uint64_t>();
-        }
-    }
     void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
     {
         if (has_key(m_json, name))
@@ -241,11 +234,41 @@ public:
             adapter.set(m_json.at(name).get<std::string>());
         }
     }
+    void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<int64_t>());
+        }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<double>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<double>());
+        }
+    }
+
     void on_adapter(const std::string& name, ValueAccessor<std::vector<int64_t>>& adapter) override
     {
         if (has_key(m_json, name))
         {
             adapter.set(m_json.at(name).get<std::vector<int64_t>>());
+        }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::vector<float>>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<std::vector<float>>());
+        }
+    }
+    void on_adapter(const std::string& name,
+                    ValueAccessor<std::vector<std::string>>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<std::vector<std::string>>());
         }
     }
 
@@ -3261,7 +3284,7 @@ json JSONSerializer::serialize_output_vector(const OutputVector& output_vector)
 json JSONSerializer::serialize_node(const Node& n)
 {
     const NodeTypeInfo& type_info = n.get_type_info();
-    json jtype_info;
+    json jtype_info = json::object();
     jtype_info["name"] = type_info.name;
     jtype_info["version"] = type_info.version;
     json node;
@@ -3324,11 +3347,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         node["provenance_tags"] = provenance_tags;
     }
-    auto type_info = n.get_type_info();
-    json jtype_info = json::object();
-    jtype_info["name"] = type_info.name;
-    jtype_info["version"] = type_info.version;
-    node["type_info"] = jtype_info;
 
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push

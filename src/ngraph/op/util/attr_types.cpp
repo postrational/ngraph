@@ -18,7 +18,6 @@
 #include "ngraph/check.hpp"
 #include "ngraph/enum_names.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/enum_names.hpp"
 
 using namespace ngraph;
 
