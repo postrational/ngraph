@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,12 +25,13 @@
 #include "batch_fusion.hpp"
 
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -62,8 +63,8 @@ static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv)
 {
     Strides stride_1{1, 1};
     CoordinateDiff pad_0{0, 0};
-    return conv->get_window_dilation_strides() == stride_1 ||
-           conv->get_data_dilation_strides() == stride_1 || conv->get_padding_above() == pad_0 ||
+    return conv->get_window_dilation_strides() == stride_1 &&
+           conv->get_data_dilation_strides() == stride_1 && conv->get_padding_above() == pad_0 &&
            conv->get_padding_below() == pad_0;
 }
 
@@ -115,6 +116,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
             NGRAPH_DEBUG << "convolution data's rank isn't equal to 4";
             return {nullptr};
         }
+
         if (!is_trivial_convolution(sconv))
         {
             NGRAPH_DEBUG << arg->get_name() << " isn't trivial convolution";
