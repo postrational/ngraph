@@ -14,34 +14,27 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifdef NGRAPH_UNIT_TEST_OPENVINO_ENABLE
-#include "backend_utils.hpp"
-#include <ie_core.hpp>
+#include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "util/type_prop.hpp"
 
 using namespace std;
 using namespace ngraph;
-using namespace InferenceEngine;
 
-Blob::Ptr fill_blob(SizeVector shape, std::vector<float> data)
+TEST(type_prop, non_zero)
 {
-    Layout layout;
-    switch (shape.size())
-    {
-    case 1: layout = Layout::C; break;
-    case 2: layout = Layout::NC; break;
-    case 3: layout = Layout::CHW; break;
-    case 4: layout = Layout::NCHW; break;
-    case 5: layout = Layout::NCDHW; break;
-    default: THROW_IE_EXCEPTION << "Can't convert dims " << shape.size() << " to Layout!";
-    }
-    MemoryBlob::Ptr blob(new TBlob<float>({Precision::FP32, shape, layout}));
-    blob->allocate();
-    float* blob_ptr = blob->rwmap().as<float*>();
-    for (int i = 0; i < data.size(); i++)
-    {
-        blob_ptr[i] = data[i];
-    }
-    return blob;
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 3, 224, 224});
+    auto non_zero = make_shared<op::NonZero>(data);
+    EXPECT_EQ(non_zero->get_element_type(), element::i64);
+    EXPECT_TRUE(
+        non_zero->get_output_partial_shape(0).same_scheme(PartialShape{4, Dimension::dynamic()}));
 }
-#endif
+
+TEST(type_prop, non_zero_dynamic)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto non_zero = make_shared<op::NonZero>(data);
+    EXPECT_EQ(non_zero->get_element_type(), element::i64);
+    EXPECT_TRUE(non_zero->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic()}));
+}
