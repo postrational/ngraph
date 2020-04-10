@@ -16,13 +16,19 @@
 
 #pragma once
 
+#if defined(NGRAPH_CPU_ENABLE) && defined(NGRAPH_CPU_STATIC_LIB_ENABLE)
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend();
 namespace ngraph
 {
     namespace runtime
     {
         namespace cpu
         {
-            void static_initialize();
+            bool init() { 
+                ngraph_register_cpu_backend(); }
+            static bool s_cpu_init = init();
         }
     }
 }
+#endif

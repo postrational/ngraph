@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/util.hpp"
@@ -56,6 +57,8 @@ unordered_map<string, runtime::BackendConstructor>& runtime::BackendManager::get
 
 void runtime::BackendManager::register_backend(const string& name, BackendConstructor new_backend)
 {
+    NGRAPH_INFO << name;
+    NGRAPH_INFO << static_cast<void*>(&get_registry());
     get_registry()[name] = new_backend;
 }
 
@@ -88,6 +91,10 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     }
 
     auto& registry = get_registry();
+    for(auto b : registry)
+    {
+        NGRAPH_INFO << b.first;
+    }
     auto it = registry.find(type);
     string error;
 #ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE

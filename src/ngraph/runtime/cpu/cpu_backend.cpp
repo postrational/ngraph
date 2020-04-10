@@ -29,7 +29,6 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor.hpp"
-#include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
@@ -42,6 +41,7 @@ using namespace std;
 
 extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 {
+    NGRAPH_INFO << "*********************";
     runtime::BackendManager::register_backend("CPU", [](const std::string& /* config */) {
         static bool is_initialized = false;
         if (!is_initialized)

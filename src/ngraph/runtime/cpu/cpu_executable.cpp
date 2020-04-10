@@ -30,7 +30,6 @@
 #include "ngraph/runtime/cpu/cpu_executable.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor.hpp"
-#include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE

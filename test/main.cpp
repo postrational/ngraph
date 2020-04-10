@@ -25,7 +25,10 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
+
+// static initialize is only needed when linking static backend libraries
+#include "ngraph/runtime/cpu/static_initialize.hpp"
+#include "ngraph/runtime/interpreter/static_initialize.hpp"
 
 using namespace std;
 
@@ -51,12 +54,6 @@ int main(int argc, char** argv)
         }
     }
     ngraph::runtime::Backend::set_backend_shared_library_search_directory(cpath);
-#ifdef NGRAPH_CPU_ENABLE
-    ngraph_register_cpu_backend();
-#endif
-#ifdef NGRAPH_INTERPRETER_ENABLE
-    ngraph_register_interpreter_backend();
-#endif
 #ifdef NGRAPH_IE_ENABLE
     ngraph_register_ie_backend();
 #endif
