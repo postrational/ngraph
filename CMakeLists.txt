@@ -65,6 +65,11 @@ endif()
 
 project (ngraph)
 
+include(linux_info)
+
+get_linux_info()
+message(STATUS "LINUX_FLAVOR ${LINUX_FLAVOR}")
+
 if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
