@@ -17,6 +17,8 @@
 set(LLVM_PROJECT_ROOT ${EXTERNAL_PROJECTS_ROOT}/llvm-project)
 set(LLVM_INSTALL_ROOT ${EXTERNAL_PROJECTS_ROOT}/llvm)
 
+message(STATUS "&&&&&&&&&&&&& ${CMAKE_MODULE_PATH}")
+set(MODULE_PATH ${CMAKE_MODULE_PATH})
 configure_file(${CMAKE_SOURCE_DIR}/cmake/llvm_fetch.in.cmake ${LLVM_PROJECT_ROOT}/CMakeLists.txt @ONLY)
 
 execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"

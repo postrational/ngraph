@@ -66,15 +66,7 @@ endif()
 project (ngraph)
 
 include(linux_info)
-
 get_linux_info()
-if (UBUNTU)
-    MESSAGE(STATUS "**************** UBUNTU")
-elseif (REDHAT)
-    MESSAGE(STATUS "**************** REDHAT")
-else()
-    MESSAGE(STATUS "**************** ???")
-endif()
 
 if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
