@@ -153,7 +153,7 @@ void op::GRUCell::pre_validate_and_infer_types()
                           ".");
 }
 
-NodeVector op::GRUCell::decompose_op() const
+OutputVector op::GRUCell::decompose_op() const
 {
     // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
     // The names used below are analogous to the one used in ONNX documentation.
@@ -194,10 +194,10 @@ NodeVector op::GRUCell::decompose_op() const
     Output<Node> B = input_value(4);
 
     // Get W and R biases separately.
-    NodeVector b_W_R = builder::split(B, 2);
+    OutputVector b_W_R = builder::split(B, 2);
     // Each tensor has shape: [gates_count * hidden_size]
-    const auto& Wb = b_W_R.at(0);
-    const auto& Rb = b_W_R.at(1);
+    const auto Wb = b_W_R.at(0);
+    const auto Rb = b_W_R.at(1);
 
     // Split W bias into zr and h gates.
     NodeVector Wb_zr_h =

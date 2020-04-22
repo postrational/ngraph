@@ -214,7 +214,7 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           ".");
 }
 
-NodeVector op::LSTMCell::decompose_op() const
+OutputVector op::LSTMCell::decompose_op() const
 {
     // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
     // The names used below are analogous to the one used in ONNX documentation.

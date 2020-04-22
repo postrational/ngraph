@@ -46,7 +46,7 @@ bool ngraph::op::v0::LSTMSequence::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("weights_format", m_weights_format);
     return true;
 }
-NodeVector op::LSTMSequence::decompose_op() const
+OutputVector op::LSTMSequence::decompose_op() const
 {
     NodeVector results;
     if (m_direction == direction::FORWARD || m_direction == direction::REVERSE)
