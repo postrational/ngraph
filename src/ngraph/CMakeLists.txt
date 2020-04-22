@@ -738,6 +738,7 @@ endif()
 if(NGRAPH_JSON_ENABLE)
     target_link_libraries(ngraph PRIVATE libjson)
 endif()
+target_link_libraries(ngraph PRIVATE opencv_core)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (LINUX)

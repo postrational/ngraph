@@ -543,6 +543,8 @@ if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
     set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
+include(cmake/external_opencv.cmake)
+
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     if (MSVC)
         # When we build dll libraries. These flags make sure onnx and protobuf build with /MD, not /MT.
