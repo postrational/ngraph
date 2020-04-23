@@ -299,7 +299,7 @@ shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
                 shape_split_lengths);
             // We're reducing vectors thus, just single zero axis to reduce and keep dims to true.
             const auto first_part_dim = make_shared<ngraph::opset1::ReduceProd>(
-                split_parts->get_output_as_single_output_node(0),
+                split_parts->output(0),
                 ngraph::opset1::Constant::create(element::i64, Shape{}, {0}),
                 true);
             // TODO, handle edge case where first part is empty - then should equal to one
