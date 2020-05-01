@@ -1356,6 +1356,7 @@ namespace ngraph
                 {
                     writer << "reference::lrn<" << lrn->get_element_type().c_type_string() << ">(";
                     writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            {" << join(lrn->get_reduction_axes()) << "},\n";
                     writer << "            " << out[0].get_name() << ",\n";
                     writer << "            {" << join(args[0].get_shape()) << "},\n";
                     writer << "            " << lrn->get_alpha() << ",\n";

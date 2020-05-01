@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
