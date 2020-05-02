@@ -16,20 +16,20 @@
 
 #pragma once
 
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <mutex>
-#include <string>
-#include <thread>
 #ifdef _WIN32
 #include <windows.h>
 // windows.h must be before processthreadsapi.h so we need this comment
 #include <processthreadsapi.h>
-#define getpid() GetCurrentProcessId()
+//#define getpid() GetCurrentProcessId()
+#define getpid() 1
 #else
 #include <unistd.h>
 #endif
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <thread>
 
 #include <ngraph/ngraph_visibility.hpp>
 
@@ -95,9 +95,7 @@ private:
         return std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
     }
     static std::string get_thread_id();
-    static std::mutex& get_mutex() { return s_file_mutex; }
     static std::ostream s_ostream;
-    static std::mutex s_file_mutex;
     static bool s_tracing_enabled;
 };
 

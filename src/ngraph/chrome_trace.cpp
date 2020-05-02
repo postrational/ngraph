@@ -19,7 +19,7 @@
 #include <sstream>
 #include <string>
 
-#include "chrome_trace.hpp"
+#include "ngraph/chrome_trace.hpp"
 #include "ngraph/env_util.hpp"
 #include "ngraph/log.hpp"
 
@@ -33,10 +33,9 @@ static bool read_tracing_env_var()
     return is_enabled;
 }
 
-mutex event::Manager::s_file_mutex;
-bool event::Manager::s_tracing_enabled = read_tracing_env_var();
+bool ngraph::event::Manager::s_tracing_enabled = read_tracing_env_var();
 
-event::Duration::Duration(const string& name, const string& category, const string& args)
+ngraph::event::Duration::Duration(const string& name, const string& category, const string& args)
 {
     if (Manager::is_tracing_enabled())
     {
@@ -48,7 +47,7 @@ event::Duration::Duration(const string& name, const string& category, const stri
     }
 }
 
-void event::Duration::stop()
+void ngraph::event::Duration::stop()
 {
     if (Manager::is_tracing_enabled())
     {
@@ -56,19 +55,17 @@ void event::Duration::stop()
     }
 }
 
-void event::Duration::write()
+void ngraph::event::Duration::write()
 {
     if (Manager::is_tracing_enabled())
     {
         size_t stop_time = (m_stop != 0 ? m_stop : Manager::get_current_microseconds());
 
-        lock_guard<mutex> lock(Manager::get_mutex());
-
-        ofstream& out = event::Manager::get_output_stream();
+        ofstream& out = ngraph::event::Manager::get_output_stream();
         string str;
         if (out.is_open() == false)
         {
-            event::Manager::open();
+            ngraph::event::Manager::open();
         }
         else
         {
@@ -88,19 +85,17 @@ void event::Duration::write()
     }
 }
 
-event::Object::Object(const string& name, const string& args)
+ngraph::event::Object::Object(const string& name, const string& args)
     : m_name{name}
     , m_id{static_cast<size_t>(chrono::high_resolution_clock::now().time_since_epoch().count())}
 {
     if (Manager::is_tracing_enabled())
     {
-        lock_guard<mutex> lock(Manager::get_mutex());
-
-        ofstream& out = event::Manager::get_output_stream();
+        ofstream& out = ngraph::event::Manager::get_output_stream();
         string str;
         if (out.is_open() == false)
         {
-            event::Manager::open();
+            ngraph::event::Manager::open();
         }
         else
         {
@@ -119,16 +114,14 @@ event::Object::Object(const string& name, const string& args)
     }
 }
 
-void event::Object::snapshot(const string& args)
+void ngraph::event::Object::snapshot(const string& args)
 {
     if (Manager::is_tracing_enabled())
     {
-        lock_guard<mutex> lock(Manager::get_mutex());
-
-        ofstream& out = event::Manager::get_output_stream();
+        ofstream& out = ngraph::event::Manager::get_output_stream();
         if (out.is_open() == false)
         {
-            event::Manager::open();
+            ngraph::event::Manager::open();
         }
         else
         {
@@ -138,7 +131,7 @@ void event::Object::snapshot(const string& args)
     }
 }
 
-void event::Object::write_snapshot(ostream& out, const string& args)
+void ngraph::event::Object::write_snapshot(ostream& out, const string& args)
 {
     string str = R"({"name":")" + m_name + R"(","ph":"O","id":")" + to_string(m_id) +
                  R"(","ts":)" + to_string(Manager::get_current_microseconds()) +
@@ -151,16 +144,14 @@ void event::Object::write_snapshot(ostream& out, const string& args)
     out << str;
 }
 
-void event::Object::destroy()
+void ngraph::event::Object::destroy()
 {
     if (Manager::is_tracing_enabled())
     {
-        lock_guard<mutex> lock(Manager::get_mutex());
-
-        ofstream& out = event::Manager::get_output_stream();
+        ofstream& out = ngraph::event::Manager::get_output_stream();
         if (out.is_open() == false)
         {
-            event::Manager::open();
+            ngraph::event::Manager::open();
         }
         else
         {
@@ -173,7 +164,7 @@ void event::Object::destroy()
     }
 }
 
-void event::Manager::open(const string& path)
+void ngraph::event::Manager::open(const string& path)
 {
     ofstream& out = get_output_stream();
     if (out.is_open() == false)
@@ -183,7 +174,7 @@ void event::Manager::open(const string& path)
     }
 }
 
-void event::Manager::close()
+void ngraph::event::Manager::close()
 {
     ofstream& out = get_output_stream();
     if (out.is_open())
@@ -193,34 +184,34 @@ void event::Manager::close()
     }
 }
 
-ofstream& event::Manager::get_output_stream()
+ofstream& ngraph::event::Manager::get_output_stream()
 {
     static ofstream s_event_log;
     return s_event_log;
 }
 
-const string& event::Manager::get_process_id()
+const string& ngraph::event::Manager::get_process_id()
 {
     static const string s_pid = to_string(getpid());
     return s_pid;
 }
 
-void event::Manager::enable_event_tracing()
+void ngraph::event::Manager::enable_event_tracing()
 {
     s_tracing_enabled = true;
 }
 
-void event::Manager::disable_event_tracing()
+void ngraph::event::Manager::disable_event_tracing()
 {
     s_tracing_enabled = false;
 }
 
-bool event::Manager::is_event_tracing_enabled()
+bool ngraph::event::Manager::is_event_tracing_enabled()
 {
     return s_tracing_enabled;
 }
 
-string event::Manager::get_thread_id()
+string ngraph::event::Manager::get_thread_id()
 {
     thread::id tid = this_thread::get_id();
     static map<thread::id, string> tid_map;

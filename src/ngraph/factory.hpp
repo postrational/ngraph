@@ -17,15 +17,12 @@
 #pragma once
 
 #include <functional>
-#include <mutex>
 #include <unordered_map>
 
 #include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
-    NGRAPH_API std::mutex& get_registry_mutex();
-
     /// \brief Registry of factories that can construct objects derived from BASE_TYPE
     template <typename BASE_TYPE>
     class FactoryRegistry
@@ -44,7 +41,6 @@ namespace ngraph
         /// \brief Register a custom factory for type_info
         void register_factory(const typename BASE_TYPE::type_info_t& type_info, Factory factory)
         {
-            std::lock_guard<std::mutex> guard(get_registry_mutex());
             m_factory_map[type_info] = factory;
         }
 
@@ -65,7 +61,6 @@ namespace ngraph
         /// \brief Check to see if a factory is registered
         bool has_factory(const typename BASE_TYPE::type_info_t& info)
         {
-            std::lock_guard<std::mutex> guard(get_registry_mutex());
             return m_factory_map.find(info) != m_factory_map.end();
         }
 
@@ -79,7 +74,6 @@ namespace ngraph
         /// \brief Create an instance for type_info
         BASE_TYPE* create(const typename BASE_TYPE::type_info_t& type_info) const
         {
-            std::lock_guard<std::mutex> guard(get_registry_mutex());
             auto it = m_factory_map.find(type_info);
             return it == m_factory_map.end() ? nullptr : it->second();
         }

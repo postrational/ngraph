@@ -698,6 +698,8 @@ set_target_properties(ngraph PROPERTIES
                       C_VISIBILITY_PRESET hidden
                       VISIBILITY_INLINES_HIDDEN ON)
 
+set_target_properties(ngraph PROPERTIES COMMON_LANGUAGE_RUNTIME "")
+
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
 endif()

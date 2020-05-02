@@ -14,8 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <mutex>
-
 #include "ngraph/factory.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops.hpp"
@@ -24,23 +22,15 @@ using namespace std;
 
 namespace ngraph
 {
-    mutex& get_registry_mutex()
-    {
-        static mutex registry_mutex;
-        return registry_mutex;
-    }
-
     template class NGRAPH_API FactoryRegistry<Node>;
 
     template <>
     FactoryRegistry<Node>& FactoryRegistry<Node>::get()
     {
         static FactoryRegistry<Node> registry;
-        static mutex init_guard;
         // TODO: Add a lock
         if (registry.m_factory_map.size() == 0)
         {
-            lock_guard<mutex> guard(init_guard);
             if (registry.m_factory_map.size() == 0)
             {
 #define NGRAPH_OP(NAME, NAMESPACE, VERSION) registry.register_factory<NAMESPACE::NAME>();

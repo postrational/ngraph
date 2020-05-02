@@ -65,10 +65,9 @@ endif()
 
 project (ngraph)
 
-include(linux_info)
-get_linux_info()
-
 if (UNIX AND NOT APPLE)
+    include(linux_info)
+    get_linux_info()
     set(LINUX TRUE)
 endif()
 
