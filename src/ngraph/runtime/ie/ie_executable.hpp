@@ -20,7 +20,11 @@
 #include <string>
 #include <vector>
 
+#ifdef INTERFACE_ENGINE_FOUND
 #include <ie_core.hpp>
+#else
+#include "ie_stub.hpp"
+#endif
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
