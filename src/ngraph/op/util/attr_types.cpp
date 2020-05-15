@@ -83,6 +83,7 @@ namespace ngraph
         static auto enum_names =
             EnumNames<op::AutoBroadcastType>("op::AutoBroadcastType",
                                              {{"NONE", op::AutoBroadcastType::NONE},
+                                              {"EXPLICIT", op::AutoBroadcastType::EXPLICIT},
                                               {"NUMPY", op::AutoBroadcastType::NUMPY},
                                               {"PDPD", op::AutoBroadcastType::PDPD}});
         return enum_names;
@@ -96,6 +97,7 @@ namespace ngraph
             EnumNames<op::BroadcastType>("op::BroadcastType",
                                          {{"NONE", op::BroadcastType::NONE},
                                           {"NUMPY", op::BroadcastType::NUMPY},
+                                          {"EXPLICIT", op::BroadcastType::EXPLICIT},
                                           {"PDPD", op::BroadcastType::PDPD},
                                           {"BIDIRECTIONAL", op::BroadcastType::BIDIRECTIONAL}});
         return enum_names;
