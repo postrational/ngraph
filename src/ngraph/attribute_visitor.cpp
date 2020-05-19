@@ -16,6 +16,7 @@
 
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/attribute_adapter.hpp"
+#include "ngraph/node.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -172,6 +173,10 @@ const AttributeVisitor::node_id_t AttributeVisitor::invalid_node_id = "";
 
 void AttributeVisitor::register_node(const std::shared_ptr<Node>& node, node_id_t id)
 {
+    if (id == invalid_node_id)
+    {
+        id = node->get_friendly_name();
+    }
     m_id_node_map[id] = node;
     m_node_id_map[node] = id;
 }
@@ -186,5 +191,5 @@ AttributeVisitor::node_id_t
     AttributeVisitor::get_registered_node_id(const std::shared_ptr<Node>& node)
 {
     auto it = m_node_id_map.find(node);
-    return it == m_node_id_map.end() ? "" : it->second;
+    return it == m_node_id_map.end() ? invalid_node_id : it->second;
 }

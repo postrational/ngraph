@@ -64,3 +64,29 @@ ngraph::AxisVector& ngraph::AxisVector::operator=(AxisVector&& v) noexcept
     static_cast<std::vector<size_t>*>(this)->operator=(v);
     return *this;
 }
+
+const std::vector<int64_t>& ngraph::AttributeAdapter<ngraph::AxisVector>::get()
+{
+    if (!m_buffer_valid)
+    {
+        m_buffer.clear();
+        for (auto elt : m_ref)
+        {
+            m_buffer.push_back(elt);
+        }
+        m_buffer_valid = true;
+    }
+    return m_buffer;
+}
+
+void ngraph::AttributeAdapter<ngraph::AxisVector>::set(const std::vector<int64_t>& value)
+{
+    m_ref = AxisVector();
+    for (auto elt : value)
+    {
+        m_ref.push_back(elt);
+    }
+    m_buffer_valid = false;
+}
+
+constexpr ngraph::DiscreteTypeInfo ngraph::AttributeAdapter<ngraph::AxisVector>::type_info;

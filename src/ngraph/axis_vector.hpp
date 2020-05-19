@@ -20,6 +20,7 @@
 #include <ostream>
 #include <vector>
 
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
@@ -49,6 +50,25 @@ namespace ngraph
         NGRAPH_API AxisVector& operator=(const AxisVector& v);
 
         NGRAPH_API AxisVector& operator=(AxisVector&& v) noexcept;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<AxisVector> : public ValueAccessor<std::vector<int64_t>>
+    {
+    public:
+        AttributeAdapter(AxisVector& value)
+            : m_ref(value)
+        {
+        }
+
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<AxisVector>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        AxisVector& m_ref;
+        std::vector<int64_t> m_buffer;
+        bool m_buffer_valid{false};
     };
 
     NGRAPH_API

@@ -96,7 +96,7 @@ bool AttributeAdapter<ResultVector>::visit_attributes(AttributeVisitor& visitor,
     ostringstream index;
     for (int64_t i = 0; i < size; i++)
     {
-        index.clear();
+        index.str("");
         index << i;
         string id;
         if (m_ref[i])

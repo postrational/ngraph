@@ -138,7 +138,8 @@ namespace ngraph
         ///
         /// No node may be used as an attribute unless it has already been registered with an ID.
         /// References to nodes are visited with a ValueAccessor of their ID.
-        virtual void register_node(const std::shared_ptr<Node>& node, node_id_t id);
+        virtual void register_node(const std::shared_ptr<Node>& node,
+                                   node_id_t id = invalid_node_id);
         /// Returns the node with the given id, or nullptr if there is no registered node
         virtual std::shared_ptr<Node> get_registered_node(node_id_t id);
         /// Returns the id for the node, or -1 if the node is not registered

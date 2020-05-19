@@ -250,7 +250,7 @@ namespace ngraph
         ostringstream index;
         for (int64_t i = 0; i < size; i++)
         {
-            index.clear();
+            index.str("");
             index << i;
             visitor.on_attribute(index.str(), m_ref[i]);
         }
@@ -302,7 +302,7 @@ namespace ngraph
         ostringstream index;
         for (int64_t i = 0; i < size; i++)
         {
-            index.clear();
+            index.str("");
             index << i;
             visitor.on_attribute(index.str(), m_ref[i]);
         }
@@ -313,25 +313,12 @@ namespace ngraph
 
 bool op::v0::TensorIterator::visit_attributes(AttributeVisitor& visitor)
 {
-#if 0
-    // We assume the ops in body lambda are alread registered
-    ParameterVector body_parameters;
-    ResultVector body_results;
-    if (m_body)
-    {
-        body_parameters = m_body->get_parameters();
-        body_results = m_body->get_results();
-    }
-    visitor.on_attribute("body_parameters", body_parameters);
-    visitor.on_attribute("body_results", body_results);
     if (!m_body)
     {
-        m_body = make_shared<BodyLambda>(body_results, body_parameters);
+        m_body = make_shared<BodyLambda>();
     }
-#else
-    // Handled manually
-    m_body = make_shared<BodyLambda>();
-#endif
+    shared_ptr<Lambda> lambda = m_body;
+    visitor.on_attribute("body", lambda);
     visitor.on_attribute("input_descriptions", m_input_descriptions);
     visitor.on_attribute("output_descriptions", m_output_descriptions);
 

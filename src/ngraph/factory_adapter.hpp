@@ -31,29 +31,37 @@ namespace ngraph
         {
         }
 
+        /// \brief Hook for extra processing before other attributes
+        virtual bool on_start(AttributeVisitor& /* visitor */) { return true; }
+        /// \brief Hook for extra processing after other attributes
+        virtual bool on_finish(AttributeVisitor& /* visitor */) { return true; }
         bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
         {
             visitor.start_structure(name);
-            std::string type_info_name;
-            uint64_t type_info_version;
-            if (m_ref)
+            if (on_start(visitor))
             {
-                auto& type_info = m_ref->get_type_info();
-                type_info_name = type_info.name;
-                type_info_version = type_info.version;
-            }
-            visitor.on_attribute("name", type_info_name);
-            visitor.on_attribute("version", type_info_version);
-            if (!type_info_name.empty() && !m_ref)
-            {
-                m_ref = std::shared_ptr<BASE_TYPE>(FactoryRegistry<BASE_TYPE>::get().create(
-                    DiscreteTypeInfo{type_info_name.c_str(), type_info_version}));
-            }
-            if (m_ref)
-            {
-                visitor.start_structure("value");
-                m_ref->visit_attributes(visitor);
-                visitor.finish_structure();
+                std::string type_info_name;
+                uint64_t type_info_version;
+                if (m_ref)
+                {
+                    auto& type_info = m_ref->get_type_info();
+                    type_info_name = type_info.name;
+                    type_info_version = type_info.version;
+                }
+                visitor.on_attribute("name", type_info_name);
+                visitor.on_attribute("version", type_info_version);
+                if (!type_info_name.empty() && !m_ref)
+                {
+                    m_ref = std::shared_ptr<BASE_TYPE>(FactoryRegistry<BASE_TYPE>::get().create(
+                        DiscreteTypeInfo{type_info_name.c_str(), type_info_version}));
+                }
+                if (m_ref)
+                {
+                    visitor.start_structure("value");
+                    m_ref->visit_attributes(visitor);
+                    visitor.finish_structure();
+                }
+                on_finish(visitor);
             }
             visitor.finish_structure();
             return true;
